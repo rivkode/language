@@ -1,5 +1,7 @@
-package com.learner.language.domain
+package com.learner.language.domain.sentence
 
+import com.learner.language.common.BaseEntity
+import com.learner.language.domain.user.User
 import jakarta.persistence.*
 
 @Entity

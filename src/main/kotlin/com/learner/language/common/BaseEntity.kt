@@ -1,4 +1,4 @@
-package com.learner.language.domain
+package com.learner.language.common
 
 import jakarta.persistence.*
 import org.springframework.data.annotation.CreatedDate
@@ -37,4 +37,3 @@ abstract class AuditingEntityId : Serializable {
         protected set
 
 }
-
