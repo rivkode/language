@@ -1,7 +1,5 @@
 package com.learner.language.domain.word
 
-import com.learner.language.domain.word.match.WordUserMatch
-
 class WordCommand{
 
     data class RetrieveMyWord(

@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component
 class WordWriterImpl(
     private val wordRepository: WordRepository
 ) : WordWriter {
-    override fun registerWord(word: Word): Word {
+    override fun save(word: Word): Word {
         return wordRepository.save(word)
     }
 

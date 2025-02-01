@@ -1,4 +1,4 @@
-package com.learner.language.domain.word.match
+package com.learner.language.domain.word.usermatch
 
 import com.learner.language.common.BaseEntity
 import com.learner.language.domain.user.User

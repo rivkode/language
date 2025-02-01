@@ -1,6 +1,6 @@
 package com.learner.language.domain.word
 
-import com.learner.language.domain.word.match.WordUserMatchRepository
+import com.learner.language.domain.word.usermatch.WordUserMatchRepository
 import org.springframework.stereotype.Component
 
 @Component
@@ -11,7 +11,7 @@ class WordServiceImpl(
 ) : WordService {
 
     override fun registerWord(wordRegisterCommand: WordCommand.RegisterWord): WordInfo {
-        val word = wordWriter.registerWord(wordRegisterCommand.toEntity())
+        val word = wordWriter.save(wordRegisterCommand.toEntity())
         val wordInfo = WordInfo(word)
 
         return wordInfo
