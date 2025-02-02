@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/api/sentences")
+@RequestMapping("/api/v1/sentences")
 class SentenceApiController(
     private val sentenceFacade: SentenceFacade
 ) {

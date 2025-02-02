@@ -9,7 +9,7 @@ class SentenceDto {
         @NotEmpty(message = "userText는 입력이 필수입니다.")
         val userText: String,
         @NotEmpty(message = "userId는 입력이 필수 입니다")
-        val userId: Int,
+        val userId: Long,
     ) {
         fun toCommand(): SentenceCommand.Register {
             return SentenceCommand.Register(
