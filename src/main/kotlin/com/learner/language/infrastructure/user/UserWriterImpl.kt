@@ -8,11 +8,11 @@ import org.springframework.stereotype.Component
 class UserWriterImpl(
     private val userRepository: UserRepository
 ) : UserWriter {
-    override fun registerUser(user: User): User {
+    override fun save(user: User): User {
         return userRepository.save(user)
     }
 
-    override fun updateUser(user: User) : User {
+    override fun update(user: User) : User {
         return userRepository.save(user)
     }
 }

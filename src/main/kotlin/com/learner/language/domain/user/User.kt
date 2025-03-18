@@ -4,17 +4,17 @@ import com.learner.language.common.BaseEntity
 import jakarta.persistence.*
 
 @Entity
-@Table(name = "user")
+@Table(name = "\"user\"")
 class User(
 
-    @Column(name = "email", nullable = false)
-    var email: String,
+    @Embedded
+    var email: UserEmail,
 
     @Column(name = "username", nullable = false)
     var username: String,
 
-    @Column(name = "password", nullable = false)
-    var password: String,
+    @Embedded
+    var password: UserPassword,
 
     @Enumerated(EnumType.STRING)
     var role: Role

@@ -1,8 +1,8 @@
 package com.learner.language.domain.user
 
 interface UserWriter {
-    fun registerUser(user: User) : User
+    fun save(user: User) : User
 
-    fun updateUser(user: User) : User
+    fun update(user: User) : User
 
 }
