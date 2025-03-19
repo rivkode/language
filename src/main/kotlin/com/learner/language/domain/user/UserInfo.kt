@@ -8,6 +8,6 @@ data class UserInfo(
     constructor(user: User) : this(
         id = user.id,
         username = user.username,
-        email = user.email
+        email = user.email.email
     )
 }

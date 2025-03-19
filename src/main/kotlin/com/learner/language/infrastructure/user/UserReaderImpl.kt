@@ -1,6 +1,7 @@
 package com.learner.language.infrastructure.user
 
 import com.learner.language.domain.user.User
+import com.learner.language.domain.user.UserEmail
 import com.learner.language.domain.user.UserReader
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Component
@@ -17,9 +18,14 @@ class UserReaderImpl(
     }
 
     override fun getUserByEmail(email: String): User {
-        return userRepository.findByEmail(email)
+        val userEmail = UserEmail(email)
+        return userRepository.findByEmail(userEmail)
             .orElseThrow {
                 EntityNotFoundException()
             }
+    }
+
+    override fun existsByEmail(userEmail: UserEmail): Boolean {
+        return userRepository.existsByEmail(userEmail)
     }
 }
