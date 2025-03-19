@@ -8,8 +8,8 @@ import jakarta.persistence.*
 @Table(name = "sentence")
 class Sentence(
 
-    @Column(name = "user_text", nullable = false)
-    var userText: String,
+    @Column(name = "user_sentence", nullable = false)
+    var userSentence: String,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
