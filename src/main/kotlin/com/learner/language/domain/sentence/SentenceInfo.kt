@@ -6,7 +6,13 @@ data class SentenceInfo(
 ) {
     constructor(sentence: Sentence) : this(
         userId = sentence.user.id,
-        userText = sentence.userText
+        userText = sentence.userSentence
     )
+
+    companion object {
+        fun from(sentences: List<Sentence>) : List<SentenceInfo> {
+            return sentences.map { SentenceInfo(it) }
+        }
+    }
 
 }

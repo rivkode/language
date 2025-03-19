@@ -7,14 +7,17 @@ import jakarta.validation.constraints.NotEmpty
 class SentenceDto {
     data class RegisterRequest(
         @NotEmpty(message = "userText는 입력이 필수입니다.")
-        val userText: String,
-        @NotEmpty(message = "userId는 입력이 필수 입니다")
-        val userId: Long,
+        val userSentence: String,
+        val noun: String,
+        val verb: String,
+        val adj: String
     ) {
         fun toCommand(): SentenceCommand.Register {
             return SentenceCommand.Register(
-                userText = userText,
-                userId = userId
+                userSentence = userSentence,
+                noun = noun,
+                verb = verb,
+                adj= adj
             )
         }
     }
@@ -22,4 +25,13 @@ class SentenceDto {
     data class RegisterResponse(
         val sentenceInfo: SentenceInfo
     )
+
+    data class RetrieveListResponse(
+        val sentenceInfoList: List<SentenceInfo>
+    )
+
+    data class RetrieveResponse(
+        val sentenceInfo: SentenceInfo
+    )
+
 }

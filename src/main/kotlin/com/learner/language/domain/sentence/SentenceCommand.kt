@@ -4,12 +4,14 @@ import com.learner.language.domain.user.User
 
 class SentenceCommand {
     data class Register(
-        val userText: String,
-        val userId: Long
+        val userSentence: String,
+        val noun: String,
+        val verb: String,
+        val adj: String
     ) {
         fun toEntity(user: User) : Sentence {
             return Sentence(
-                userText = userText,
+                userSentence = userSentence,
                 user = user
             )
         }

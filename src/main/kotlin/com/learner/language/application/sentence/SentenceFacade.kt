@@ -5,13 +5,23 @@ import org.springframework.stereotype.Service
 
 @Service
 class SentenceFacade(
-    private val sentenceReader: SentenceReader,
-    private val sentenceWriter: SentenceWriter,
     private val sentenceService: SentenceService,
 ) {
-    fun registerSentence(command: SentenceCommand.Register) : SentenceInfo
+    fun registerSentence(command: SentenceCommand.Register, userId: Long) : SentenceInfo
     {
-        val sentenceInfo = sentenceService.registerSentence(command)
+        val sentenceInfo = sentenceService.saveSentence(command, userId)
+
+        return sentenceInfo
+    }
+
+    fun retrieveMySentenceList(userId: Long): List<SentenceInfo> {
+        val sentenceInfoList = sentenceService.getMySentenceList(userId)
+
+        return sentenceInfoList
+    }
+
+    fun retrieveMySentence(userId: Long, sentenceId: Long): SentenceInfo {
+        val sentenceInfo = sentenceService.getMySentence(userId, sentenceId)
 
         return sentenceInfo
     }
