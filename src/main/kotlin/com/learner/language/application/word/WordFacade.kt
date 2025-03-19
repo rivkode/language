@@ -10,9 +10,21 @@ class WordFacade(
     private val wordService: WordService
 
 ) {
-    fun retrieveMyWord(command: WordCommand.RetrieveMyWord): List<WordInfo> {
-        val myWordListInfo = wordService.getMyWordList(command)
+    fun retrieveMyWord(userId: Long): List<WordInfo> {
+        val myWordListInfo = wordService.getMyWordList(userId)
 
         return myWordListInfo
+    }
+
+    fun retrieveChoice(part: Part, userId: Long, lastWordId: Long?): List<WordInfo> {
+        val selectionWords = wordService.getChoiceWord(part, userId, lastWordId)
+
+        return selectionWords
+    }
+
+    fun registerChoiceWord(command: WordCommand.RegisterChoiceWord): WordInfo {
+        val registeredSelectionWord = wordService.saveChoiceWord(command)
+
+        return registeredSelectionWord
     }
 }
