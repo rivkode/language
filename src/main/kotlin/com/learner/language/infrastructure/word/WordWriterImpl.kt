@@ -12,7 +12,7 @@ class WordWriterImpl(
         return wordRepository.save(word)
     }
 
-    override fun updateWord(word: Word): Word {
+    override fun update(word: Word): Word {
         return wordRepository.save(word)
     }
 }

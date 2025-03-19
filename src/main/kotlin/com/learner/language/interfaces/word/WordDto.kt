@@ -16,7 +16,23 @@ class WordDto {
         }
     }
 
-    data class RetrieveMyWordResponse(
+    data class RetrieveWordInfoListResponse(
         val wordInfoList: List<WordInfo>
     )
+
+    data class RetrieveWordResponse(
+        val wordInfo: WordInfo
+    )
+
+    data class RegisterChoiceRequest(
+        @NotEmpty(message = "id는 필수 입력값입니다.")
+        val wordId: Long,
+    ) {
+        fun toCommand(userId: Long): WordCommand.RegisterChoiceWord {
+            return WordCommand.RegisterChoiceWord(
+                wordId = wordId,
+                userId = userId
+            )
+        }
+    }
 }
