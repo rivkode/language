@@ -4,14 +4,20 @@ data class WordInfo(
     val id: Long,
     val label: String,
     val part: Part,
-    val description: String,
+    val enMeaning: String,
+    val krExample: String?,
+    val enExample: String?,
+    val ipa: String?,
     val level: CefrLevel
 ) {
     constructor(word: Word) : this(
         id = word.id,
         label = word.label,
         part = word.part,
-        description = word.description,
+        enMeaning = word.enMeaning,
+        krExample = word.krExample,
+        enExample = word.enExample,
+        ipa = word.ipa,
         level = word.level
     )
 

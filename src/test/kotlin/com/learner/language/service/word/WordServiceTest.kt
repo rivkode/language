@@ -5,6 +5,8 @@ import com.learner.language.domain.word.Part
 import com.learner.language.domain.word.WordReader
 import com.learner.language.domain.word.WordServiceImpl
 import com.learner.language.domain.word.WordWriter
+import com.learner.language.domain.word.review.WordReviewCountReaderImpl
+import com.learner.language.domain.word.review.WordReviewCountWriterImpl
 import com.learner.language.infrastructure.word.wordusermatch.WordUserMatchRepository
 import com.learner.language.testutils.UnitTest
 import com.learner.language.testutils.fixture.WordFixture
@@ -16,12 +18,16 @@ class WordServiceTest : UnitTest() {
     private val wordReader: WordReader = mockk()
     private val wordWriter: WordWriter = mockk()
     private val userReader: UserReader = mockk()
+    private val wordReviewCountReaderImpl: WordReviewCountReaderImpl = mockk()
+    private val wordReviewCountWriterImpl: WordReviewCountWriterImpl = mockk()
     private val wordUserMatchRepository: WordUserMatchRepository = mockk()
 
     private val wordServiceImpl = WordServiceImpl(
         wordReader = wordReader,
         wordWriter = wordWriter,
         userReader = userReader,
+        wordReviewCountReaderImpl = wordReviewCountReaderImpl,
+        wordReviewCountWriterImpl = wordReviewCountWriterImpl,
         wordUserMatchRepository = wordUserMatchRepository
     )
 

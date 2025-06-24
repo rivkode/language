@@ -10,8 +10,17 @@ class Word(
     @Column(name = "label", nullable = false)
     var label: String,
 
-    @Column(name = "description")
-    var description: String,
+    @Column(name = "en_meaning")
+    var enMeaning: String,
+
+    @Column(name = "kr_example")
+    var krExample: String?,
+
+    @Column(name = "en_example")
+    var enExample: String?,
+
+    @Column(name = "ipa")
+    var ipa: String?,
 
     @Convert(converter = PartConverter::class)
     @Column
@@ -21,12 +30,12 @@ class Word(
     @Column
     var level: CefrLevel,
 
-): BaseEntity()
+    ): BaseEntity()
 
 enum class Part(
     val order: Int
 ) {
-    NOUN(1), ADJECTIVE(2), VERB(3)
+    NOUN(1), VERB(2), ADJECTIVE(3)
 }
 
 enum class CefrLevel(
