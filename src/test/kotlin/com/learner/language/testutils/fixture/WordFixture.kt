@@ -13,9 +13,12 @@ object WordFixture {
     ): Word {
         return Word(
             label = label,
-            description = description,
+            enMeaning = description,
             part = part,
-            level = level
+            level = level,
+            krExample = "노란",
+            enExample = "this is yello",
+            ipa = "no-ran"
         )
     }
 }

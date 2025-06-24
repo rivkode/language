@@ -1,5 +1,6 @@
 package com.learner.language.interfaces.word
 
+import com.learner.language.domain.word.ReviewWords
 import com.learner.language.domain.word.WordCommand
 import com.learner.language.domain.word.WordInfo
 import jakarta.validation.constraints.NotEmpty
@@ -15,6 +16,10 @@ class WordDto {
             )
         }
     }
+
+    data class RetrieveReviewWordResponse(
+        val reviewWords: ReviewWords
+    )
 
     data class RetrieveWordInfoListResponse(
         val wordInfoList: List<WordInfo>

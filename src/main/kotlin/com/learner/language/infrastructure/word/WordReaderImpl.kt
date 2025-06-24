@@ -1,8 +1,11 @@
 package com.learner.language.infrastructure.word
 
+import com.learner.language.domain.user.User
 import com.learner.language.domain.word.Part
 import com.learner.language.domain.word.Word
+import com.learner.language.domain.word.WordList
 import com.learner.language.domain.word.WordReader
+import com.learner.language.domain.word.review.WordReviewCount
 import jakarta.persistence.EntityManager
 import jakarta.persistence.criteria.Predicate
 import org.springframework.stereotype.Component
@@ -26,8 +29,13 @@ class WordReaderImpl(
         val root = query.from(Word::class.java)
 
         val predicates = mutableListOf<Predicate>()
+        println(part)
+        println(part.order)
+        println(root.get<String>("part"))
+        println(root.get<Int>("part"))
 
-        predicates.add(cb.equal(root.get<String>("part"), part))
+        predicates.add(cb.equal(root.get<Int>("part"), part.order))
+
 
         if (wordIds.isNotEmpty()) {
             predicates.add(root.get<Long>("id").`in`(wordIds).not())
@@ -42,10 +50,57 @@ class WordReaderImpl(
             .orderBy(cb.asc(root.get<Long>("id")))
 
         val typedQuery = entityManager.createQuery(query)
-        if (wordIds.isEmpty()) {
-            typedQuery.maxResults = 3
-        }
+        typedQuery.maxResults = 3
 
         return typedQuery.resultList
     }
+
+    override fun getNoCountReviewWords(userId: Long, wordListId: Int): List<Word> {
+        val cb = entityManager.criteriaBuilder
+        val query = cb.createQuery(Word::class.java)
+        val root = query.from(WordList::class.java)
+
+        val wordJoin = root.join<WordList, Word>("word")
+
+        val subquery = query.subquery(Long::class.java)
+        val subRoot = subquery.from(WordReviewCount::class.java)
+        subquery.select(subRoot.get<Word>("word").get<Long>("id"))
+            .where(cb.equal(subRoot.get<User>("user").get<Long>("id"), userId))
+
+        query.select(wordJoin).where(
+            cb.equal(root.get<Int>("wordListId"), wordListId),
+            cb.not(wordJoin.get<Long>("id").`in`(subquery))
+        )
+
+        val noCountWords = entityManager.createQuery(query)
+        noCountWords.maxResults = 100
+
+        return noCountWords.resultList
+    }
+
+    override fun getCountReviewWords(userId: Long, wordListId: Int, count: Int): List<Word> {
+        val cb = entityManager.criteriaBuilder
+        val query = cb.createQuery(Word::class.java)
+        val root = query.from(WordList::class.java)
+        val wordJoin = root.join<WordList, Word>("word")
+
+        val subquery = query.subquery(Long::class.java)
+        val subRoot = subquery.from(WordReviewCount::class.java)
+        subquery.select(subRoot.get<Word>("word").get<Long>("id"))
+            .where(
+                cb.equal(subRoot.get<User>("user").get<Long>("id"), userId),
+                cb.equal(subRoot.get<Int>("count"), count)
+            )
+
+        query.select(wordJoin).where(
+            cb.equal(root.get<Int>("wordListId"), wordListId),
+            wordJoin.get<Long>("id").`in`(subquery)
+        )
+
+        val noCountWords = entityManager.createQuery(query)
+        noCountWords.maxResults = 100
+
+        return noCountWords.resultList
+    }
+
 }

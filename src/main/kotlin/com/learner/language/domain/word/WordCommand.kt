@@ -16,14 +16,20 @@ class WordCommand{
 
     data class RegisterWord(
         val label: String,
-        val description: String,
+        val enMeaning: String,
+        val krExample: String,
+        val enExample: String,
+        val ipa: String,
         val part: Part,
         val level: CefrLevel
     ) {
         fun toEntity() : Word {
             return Word(
                 label = label,
-                description = description,
+                enMeaning = enMeaning,
+                krExample = krExample,
+                enExample =  enExample,
+                ipa = ipa,
                 part = part,
                 level = level
             )

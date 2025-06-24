@@ -27,4 +27,10 @@ class WordFacade(
 
         return registeredSelectionWord
     }
+
+    fun retrieveReviewWords(userId: Long, wordListId: Int, count: Int): ReviewWords {
+        val reviewWords = wordService.getReviewWords(userId = userId, wordListId = wordListId, count = count)
+
+        return reviewWords
+    }
 }
