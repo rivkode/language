@@ -1,6 +1,5 @@
 package com.learner.language.domain.ai
 
-import com.learner.language.interfaces.ai.AiChatDto
 import org.springframework.ai.chat.messages.Message
 import org.springframework.ai.chat.prompt.Prompt
 import org.springframework.ai.chat.prompt.PromptTemplate
@@ -11,14 +10,18 @@ import org.springframework.stereotype.Service
 
 @Service
 class AiPromptService(
-    @Value("classpath:prompts/system-feedback-message.st")
+    @Value("classpath:prompts/system-feedback-message-0515.st")
     private val systemFeedbackResource: Resource,
-    @Value("classpath:prompts/system-question-message.st")
-    private val systemQuestionResource: Resource,
-    @Value("classpath:prompts/user-feedback-message.st")
+    @Value("classpath:prompts/system-chat-message.st")
+    private val systemChatResource: Resource,
+    @Value("classpath:prompts/system-chatroomname-message.st")
+    private val systemChatRoomNameResource: Resource,
+    @Value("classpath:prompts/user-feedback-message-0515.st")
     private val userFeedbackResource: Resource,
-    @Value("classpath:prompts/user-question-message.st")
-    private val userQuestionResource: Resource,
+    @Value("classpath:prompts/user-chat-message.st")
+    private val userChatResource: Resource,
+    @Value("classpath:prompts/user-chatroomname-message.st")
+    private val userChatRoomNameResource: Resource,
 ) {
     private fun createUserFeedbackMessage(userInput: String, noun: String, verb: String, adj: String): Message {
         return PromptTemplate(userFeedbackResource).createMessage(
@@ -31,10 +34,18 @@ class AiPromptService(
         )
     }
 
-    private fun createUserQuestionMessage(userInput: String): Message {
-        return PromptTemplate(userQuestionResource).createMessage(
+    private fun createUserChatMessage(history: String): Message {
+        return PromptTemplate(userChatResource).createMessage(
             mapOf(
-                "user_question" to userInput,
+                "history" to history,
+            )
+        )
+    }
+
+    private fun createUserChatRoomNameMessage(message: String): Message {
+        return PromptTemplate(userChatRoomNameResource).createMessage(
+            mapOf(
+                "message" to message,
             )
         )
     }
@@ -44,17 +55,23 @@ class AiPromptService(
         SystemPromptTemplate(systemFeedbackResource).createMessage(
         )
 
-    private fun createSystemQuestionMessage(): Message =
-        SystemPromptTemplate(systemQuestionResource).createMessage(
+    private fun createSystemChatMessage(): Message =
+        SystemPromptTemplate(systemChatResource).createMessage(
         )
 
-    fun createPrompt(aiChatRequest: AiChatDto.AiRequest): Prompt {
+    private fun createSystemChatRoomNameMessage(): Message =
+        SystemPromptTemplate(systemChatRoomNameResource).createMessage(
+        )
+
+
+
+    fun createPrompt(aiChatRequest: AiChatCommand.AiRequest): Prompt {
         return when (aiChatRequest) {
-            is AiChatDto.AiRequest.AiFeedbackRequest -> {
+            is AiChatCommand.AiRequest.FeedbackRequest -> {
                 Prompt(
                     listOf(
                         createUserFeedbackMessage(
-                            aiChatRequest.userInput,
+                            aiChatRequest.input,
                             aiChatRequest.noun,
                             aiChatRequest.verb,
                             aiChatRequest.adj
@@ -64,13 +81,24 @@ class AiPromptService(
                 )
             }
 
-            is AiChatDto.AiRequest.AiAnswerRequest -> {
+            is AiChatCommand.AiRequest.ChatRequest -> {
                 Prompt(
                     listOf(
-                        createUserQuestionMessage(
-                            aiChatRequest.userInput
+                        createUserChatMessage(
+                            aiChatRequest.input
                         ),
-                        createSystemQuestionMessage()
+                        createSystemChatMessage()
+                    )
+                )
+            }
+
+            is AiChatCommand.AiRequest.ChatRoomNameRequest -> {
+                Prompt(
+                    listOf(
+                        createUserChatRoomNameMessage(
+                            aiChatRequest.input
+                        ),
+                        createSystemChatRoomNameMessage()
                     )
                 )
             }

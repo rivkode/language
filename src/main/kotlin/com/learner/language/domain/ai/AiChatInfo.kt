@@ -1,10 +1,7 @@
-package com.learner.language.interfaces.ai
+package com.learner.language.domain.ai
 
-import jakarta.validation.constraints.NotEmpty
-
-class AiChatDto {
+class AiChatInfo {
     sealed class AiRequest(
-        @NotEmpty(message = "User Input is missing.")
         open val userInput: String
     ) {
         data class AiFeedbackRequest(

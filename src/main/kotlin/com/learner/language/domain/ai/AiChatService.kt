@@ -1,18 +1,18 @@
 package com.learner.language.domain.ai
 
-import com.learner.language.domain.answer.Answer
-import com.learner.language.domain.answer.AnswerWriter
+import com.learner.language.domain.chat.ChatCommand
+import com.learner.language.domain.chat.ChatMessage
+import com.learner.language.domain.chat.ChatRoom
+import com.learner.language.domain.chat.ChatWriter
 import com.learner.language.domain.feedback.Feedback
+import com.learner.language.domain.feedback.FeedbackCommand
 import com.learner.language.domain.feedback.FeedbackWriter
-import com.learner.language.domain.question.Question
-import com.learner.language.domain.question.QuestionCommand
 import com.learner.language.domain.sentence.Sentence
-import com.learner.language.domain.sentence.SentenceCommand
 import com.learner.language.domain.user.User
-import com.learner.language.interfaces.ai.AiChatDto
+import com.learner.language.system.exception.BadRequestException
+import com.learner.language.system.exception.ErrorCode
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.ai.chat.client.ChatClient
-import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 
 
@@ -22,39 +22,49 @@ class AiChatService(
     private val chatClient: ChatClient,
     private val aiPromptService: AiPromptService,
     private val feedbackWriter: FeedbackWriter,
-    private val answerWriter: AnswerWriter
+    private val chatWriter: ChatWriter,
 ) {
-    fun generate(aiChatRequest: AiChatDto.AiRequest): AiChatDto.AiChatResponse {
+    fun generate(aiChatRequest: AiChatCommand.AiRequest): AiChatCommand.ChatResponse {
         val prompt = aiPromptService.createPrompt(aiChatRequest)
-        return AiChatDto.AiChatResponse(chatClient.prompt(prompt).call().content())
+        val result = chatClient.prompt(prompt).call().content()
+            ?: throw BadRequestException(ErrorCode.BAD_REQUEST, "result is null")
+        return AiChatCommand.ChatResponse(result)
     }
 
-    @Async
-    fun generateFeedback(command: SentenceCommand.Register, user: User, sentence: Sentence) {
-        val aiRequest = AiChatDto.AiRequest.AiFeedbackRequest(
-            userInput = command.userSentence,
+    fun generateFeedback(user: User, sentence: Sentence, command: FeedbackCommand.Generate): Feedback {
+        val aiRequest = AiChatCommand.AiRequest.FeedbackRequest(
+            input = command.userSentence,
             noun = command.noun,
             verb = command.verb,
             adj = command.adj,
         )
 
         val response = generate(aiRequest)
-        logger.info { "ai feedback response: ${response.response}" }
+        logger.info { "ai feedback response generateFeedback: ${response.response}" }
         val feedback = Feedback(aiFeedback = response.response, user = user, sentence = sentence)
 
-        feedbackWriter.asyncSave(feedback)
+        return feedback
     }
 
-    @Async
-    fun generateAnswer(command: QuestionCommand.Register, user: User, question: Question) {
-        val aiRequest = AiChatDto.AiRequest.AiAnswerRequest(
-            userInput = command.userQuestion
+    fun generateChat(command: ChatCommand.Generate, user: User, chatRoom: ChatRoom, chatHistory: String, nextSequence: Int): ChatMessage {
+        val aiRequest = AiChatCommand.AiRequest.ChatRequest(
+            input = chatHistory
         )
-
         val response = generate(aiRequest)
-        logger.info { "ai answer response: ${response.response}" }
-        val answer = Answer(aiAnswer = response.response, user = user, question = question)
+        logger.info { "ai answer response generateChat: ${response.response}" }
+        val chatMessage = command.toEntity(user, chatRoom, response.response, nextSequence)
 
-        answerWriter.asyncSave(answer)
+
+        return chatMessage
+    }
+
+    fun generateChatRoomName(command: ChatCommand.Register): AiChatCommand.ChatResponse {
+        val aiRequest = AiChatCommand.AiRequest.ChatRoomNameRequest(
+            input = command.message
+        )
+        val response = generate(aiRequest)
+        logger.info { "ai answer response generateChatRoomName: ${response.response}" }
+
+        return response
     }
 }
