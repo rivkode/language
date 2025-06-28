@@ -1,9 +1,0 @@
-package com.learner.language.infrastructure.question
-
-import com.learner.language.domain.question.Question
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.stereotype.Repository
-
-@Repository
-interface QuestionRepository : JpaRepository<Question, Long>{
-}
