@@ -31,4 +31,10 @@ class ChatCommand {
             )
         }
     }
+
+    data class Speech(
+        val speechText: String,
+        val chatRoomId: Long,
+    ) {
+    }
 }

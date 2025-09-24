@@ -1,10 +1,8 @@
 package com.learner.language.application.chat
 
-import com.learner.language.domain.chat.ChatCommand
-import com.learner.language.domain.chat.ChatMessageInfo
-import com.learner.language.domain.chat.ChatRoomInfo
-import com.learner.language.domain.chat.ChatService
+import com.learner.language.domain.chat.*
 import org.springframework.stereotype.Service
+import org.springframework.web.multipart.MultipartFile
 
 @Service
 class ChatFacade(
@@ -32,6 +30,18 @@ class ChatFacade(
         val chatRoomListInfo = chatService.getChatRoomList(userId)
 
         return chatRoomListInfo
+    }
+
+    fun transcribeAudio(userId: Long, audioFile: MultipartFile): AudioTranscribeInfo  {
+        val audioTranscribeInfo = chatService.transcribeAudio(userId, audioFile)
+
+        return audioTranscribeInfo
+    }
+
+    fun speechAudio(command: ChatCommand.Speech, userId: Long): AudioRecordInfo {
+        val speechInfo = chatService.speechAudio(command, userId)
+
+        return speechInfo
     }
 
 }

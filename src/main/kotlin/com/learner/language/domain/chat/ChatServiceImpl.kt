@@ -1,10 +1,14 @@
 package com.learner.language.domain.chat
 
+import com.learner.language.domain.ai.AiAudioService
 import com.learner.language.domain.ai.AiChatService
 import com.learner.language.domain.event.ChatEvent
 import com.learner.language.domain.user.UserReader
+import com.learner.language.infrastructure.chat.AudioRecordRepository
+import com.learner.language.infrastructure.chat.AudioTranscribeRepository
 import com.learner.language.infrastructure.chat.ChatRoomRepository
 import org.springframework.stereotype.Component
+import org.springframework.web.multipart.MultipartFile
 import java.time.LocalDateTime
 
 @Component
@@ -13,7 +17,10 @@ class ChatServiceImpl(
     private val chatReader: ChatReader,
     private val chatRoomRepository: ChatRoomRepository,
     private val userReader: UserReader,
-    private val aiChatService: AiChatService
+    private val aiChatService: AiChatService,
+    private val aiAudioService: AiAudioService,
+    private val audioTranscribeRepository: AudioTranscribeRepository,
+    private val audioRecordRepository: AudioRecordRepository
 ): ChatService {
     override fun saveChat(command: ChatCommand.Register, userId: Long): ChatMessageInfo {
         val user = userReader.getUserById(userId)
@@ -97,6 +104,27 @@ class ChatServiceImpl(
         } else {
             return lastChatMessage.sequence + 1
         }
+    }
+
+    override fun transcribeAudio(userId: Long, audioFile: MultipartFile): AudioTranscribeInfo {
+        val transcribeText = aiAudioService.transcribe(audioFile)
+        val user = userReader.getUserById(userId)
+        val savedAudioTranscribe = audioTranscribeRepository.save(AudioTranscribe(text = transcribeText, user = user))
+        val audioTranscribeInfo = AudioTranscribeInfo(savedAudioTranscribe)
+
+        return audioTranscribeInfo
+    }
+
+    override fun speechAudio(command: ChatCommand.Speech, userId: Long): AudioRecordInfo {
+        val speechText = command.speechText
+        val user = userReader.getUserById(userId)
+        val speechAudioFilePath = aiAudioService.speechAudio(speechText, userId)
+        val audioRecord =
+            AudioRecord(speechText = speechText, filePath = speechAudioFilePath, user = user)
+        val savedAudioRecord = audioRecordRepository.save(audioRecord)
+        val audioRecordInfo = AudioRecordInfo(savedAudioRecord)
+
+        return audioRecordInfo
     }
 
 }
