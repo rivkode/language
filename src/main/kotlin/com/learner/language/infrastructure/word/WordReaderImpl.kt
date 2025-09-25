@@ -6,6 +6,7 @@ import com.learner.language.domain.word.Word
 import com.learner.language.domain.word.WordList
 import com.learner.language.domain.word.WordReader
 import com.learner.language.domain.word.review.WordReviewCount
+import com.learner.language.infrastructure.sentence.sentencewordmatch.SentenceWordMatchRepository
 import jakarta.persistence.EntityManager
 import jakarta.persistence.criteria.Predicate
 import org.springframework.stereotype.Component
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Component
 @Component
 class WordReaderImpl(
     private val wordRepository: WordRepository,
+    private val sentenceWordMatchRepository: SentenceWordMatchRepository,
     private val entityManager: EntityManager
 ) : WordReader {
     override fun getWordListByIds(ids: List<Long>) : List<Word> {
@@ -101,6 +103,10 @@ class WordReaderImpl(
         noCountWords.maxResults = 100
 
         return noCountWords.resultList
+    }
+
+    override fun getWordListBySentenceId(sentenceId: Long): List<Word> {
+        return sentenceWordMatchRepository.findWordIdsById(sentenceId)
     }
 
 }

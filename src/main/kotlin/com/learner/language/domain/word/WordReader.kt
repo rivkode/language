@@ -8,4 +8,5 @@ interface WordReader {
     fun getChoiceWord(part: Part, wordIds: List<Long>, lastId: Long?, pageSize: Int): List<Word>
     fun getNoCountReviewWords(userId: Long, wordListId: Int): List<Word>
     fun getCountReviewWords(userId: Long, wordListId: Int, count: Int): List<Word>
+    fun getWordListBySentenceId(sentenceId: Long): List<Word>
 }
