@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service
 class AiPromptService(
     @Value("classpath:prompts/system-feedback-message-0515.st")
     private val systemFeedbackResource: Resource,
-    @Value("classpath:prompts/system-chat-message.st")
+    @Value("classpath:prompts/system-chat-message-0811.st")
     private val systemChatResource: Resource,
     @Value("classpath:prompts/system-chatroomname-message.st")
     private val systemChatRoomNameResource: Resource,
