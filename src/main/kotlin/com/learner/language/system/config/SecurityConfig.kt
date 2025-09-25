@@ -65,11 +65,10 @@ class SecurityConfig(
             .rememberMe { it.disable() }
             .anonymous { it.disable() }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
-            .addFilter(corsFilter)
+            .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter::class.java)
             .addFilterBefore(jwtAuthorizationFilter(), JwtAuthenticationFilter::class.java)
             .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter::class.java)
             .headers { it.disable() }
-            .cors { it.disable() }
             .authorizeHttpRequests {
                 it.requestMatchers(
                     "/api/v1/users/refresh-token",
@@ -77,6 +76,11 @@ class SecurityConfig(
                     "/api/v1/users",
                     "/api/v1/users/validation-email",
                     "/api/v1/users/validation-number",
+                    "/swagger-ui/**",
+                    "/swagger-ui/index.html",
+                    "/v3/api-docs/**",
+                    "/api-docs/**",
+                    "/audio/**"
                 ).permitAll()
                 it.anyRequest().authenticated()
             }
@@ -87,13 +91,9 @@ class SecurityConfig(
     @Bean
     fun corsFilter(): CorsFilter {
         val config = CorsConfiguration().apply {
-            allowedOrigins = listOf(
-                "http://localhost:5173",
-                "http://localhost:5174",
-                "http://localhost:4173"
-            )
-            allowedMethods = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-            allowCredentials = true
+            allowedOriginPatterns = listOf("*")
+            allowCredentials = false
+            allowedMethods = listOf("*")
             allowedHeaders = listOf("*")
             exposedHeaders = listOf("Authorization")
             maxAge = 3600L

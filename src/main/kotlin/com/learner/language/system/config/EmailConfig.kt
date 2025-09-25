@@ -1,20 +1,21 @@
 package com.learner.language.system.config
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.JavaMailSenderImpl
-import io.github.cdimascio.dotenv.dotenv
 
 import java.util.*
 
 @Configuration
 class EmailConfig {
 
-    private final val dotenv = dotenv()
-    val emailUsername: String = dotenv["EMAIL_USERNAME"]
-    val emailPassword: String = dotenv["EMAIL_PASSWORD"]
+    @Value("\${email.username}")
+    val emailUsername: String = ""
 
+    @Value("\${email.password}")
+    val emailPassword: String = ""
 
     @Bean
     fun javaMailSender(): JavaMailSender {
