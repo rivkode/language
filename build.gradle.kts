@@ -8,7 +8,7 @@ plugins {
 }
 
 extra["snippetsDir"] = file("build/generated-snippets")
-extra["springAiVersion"] = "1.0.0-M2"
+extra["springAiVersion"] = "1.0.0-M6"
 println(extra.properties)
 
 allOpen {
@@ -29,6 +29,7 @@ java {
 repositories {
     mavenCentral()
     maven(url = uri("https://repo.spring.io/milestone"))
+    maven(url = uri("https://repo.spring.io/snapshot"))
 }
 
 
@@ -46,9 +47,9 @@ dependencies {
     // Email
     implementation("org.springframework.boot:spring-boot-starter-mail")
 
-    // dotenv
-    val dotenvVersion = "6.5.1"
-    implementation("io.github.cdimascio:dotenv-kotlin:$dotenvVersion")
+//    // dotenv
+//    val dotenvVersion = "6.5.1"
+//    implementation("io.github.cdimascio:dotenv-kotlin:$dotenvVersion")
 
     // JSON
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -59,6 +60,12 @@ dependencies {
     implementation("io.jsonwebtoken:jjwt-jackson:$jsonVersion")
     implementation("io.jsonwebtoken:jjwt-api:$jsonVersion")
 
+    // Swagger
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")
+
+    // Kafka
+    implementation("org.springframework.kafka:spring-kafka")
+
     // UUID
 
     val uuidVersion = "4.0.1"
@@ -68,7 +75,16 @@ dependencies {
 //    val springAiVersion = "1.0.0-SNAPSHOT"
 //    implementation("org.springframework.ai:spring-ai-openai-spring-boot-starter:$springAiVersion")
 //    implementation("org.springframework.ai:spring-ai-vertex-ai-gemini-spring-boot-starter:$springAiVersion")
-    implementation("org.springframework.ai:spring-ai-openai-spring-boot-starter")
+//    implementation("org.springframework.ai:spring-ai-openai-spring-boot-starter")
+//    implementation("org.springframework.ai:spring-ai-bom:1.0.0-SNAPSHOT")
+//    implementation(platform("org.springframework.ai:spring-ai-bom:1.0.0-SNAPSHOT"))
+
+    implementation(platform("org.springframework.ai:spring-ai-bom:1.0.0-M7"))
+//    implementation("org.springframework.ai:spring-ai-openai-spring-boot-starter")
+    implementation("org.springframework.ai:spring-ai-starter-model-openai")
+
+
+
 
     // Query JDSL
     val jdslVersion = "3.5.5"
@@ -85,6 +101,9 @@ dependencies {
     // Database
     runtimeOnly("com.h2database:h2")
     runtimeOnly("com.mysql:mysql-connector-j")
+
+    //json
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 
 
     // Test
@@ -104,11 +123,11 @@ dependencies {
     testImplementation("io.mockk:mockk:$mockVersion")
 }
 
-dependencyManagement {
-    imports {
-        mavenBom("org.springframework.ai:spring-ai-bom:${property("springAiVersion")}")
-    }
-}
+//dependencyManagement {
+//    imports {
+//        mavenBom("org.springframework.ai:spring-ai-bom:${property("springAiVersion")}")
+//    }
+//}
 
 
 kotlin {

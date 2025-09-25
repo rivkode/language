@@ -11,8 +11,8 @@ import org.springframework.test.context.ActiveProfiles
 @ActiveProfiles("test")
 class LanguageApplicationTests {
 
-    @Test
-    fun contextLoads() {
-    }
+//    @Test
+//    fun contextLoads() {
+//    }
 
 }

@@ -60,7 +60,7 @@ object CookieUtil {
             isHttpOnly = true
             secure = true // HTTPS 사용 시 true
             path = "/"
-            maxAge = 5 * 60 // 5분
+            maxAge = 60 * 60 * 24 * 365
             setAttribute("SameSite", "Strict")
         }
         response.addCookie(cookie)

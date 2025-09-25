@@ -1,6 +1,5 @@
 package com.learner.language.infrastructure.user
 
-import com.learner.language.domain.user.RefreshToken
 import com.learner.language.domain.user.UserRefreshToken
 import org.springframework.data.repository.CrudRepository
 import org.springframework.stereotype.Repository

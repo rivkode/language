@@ -21,20 +21,20 @@ class MailService(
     fun sendValidateEmail(email: String, authNumber: String) {
         val from = "jonghuncu@gmail.com"
         val to = email
-        val title = "[Lingo] 인증 이메일입니다."
+        val title = "[Jamo] Verification Email"
         val htmlBody = """
             <div style='font-family: Arial, sans-serif;'>
-                <p>안녕하세요, $email 고객님</p>
+                <p>Hello $email,</p>
                 <br><br>
-                <p>[Lingo] 을 방문해주셔서 감사합니다.</p>
+                <p>Welcome to Jamo!</p>
                 <br>
-                <p>아래 발급된 이메일 인증번호를 복사하거나 직접 입력하여 인증을 완료해주세요.</p>
+                <p>To verify your email address and complete your registration, please use the following one-time verification code:</p>
                 <br>
-                <p>개인정보 보호를 위해 인증번호는 5분 간 유효합니다.</p>
+                <p>This code will expire in 5 minutes for your security.</p>
                 <br><br>
                 <p style='font-size: 20px; font-weight: bold; color: #0077ff;'>$authNumber</p>
                 <br><br>
-                <p>인증번호를 입력해주시면 회원가입이 완료됩니다.</p>
+                <p>Enter this code on the Lingo website to finalize your account setup. If you did not request this verification, please disregard this email.</p>
             </div>
         """.trimIndent()
 

@@ -11,9 +11,9 @@ spring:
     name: language
 
   datasource:
-    url: jdbc:mysql://localhost:3306/language_db?useSSL=false&characterEncoding=UTF-8
-    username: root
-    password: root
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: update
@@ -25,26 +25,19 @@ spring:
     show-sql: true
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${SPRING_DATA_REDIS_HOST}
+      port: ${SPRING_DATA_REDIS_PORT}
   ai:
     openai:
-      api-key: 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
+      api-key: ${SPRING_AI_OPENAI_API_KEY}
       chat:
         options:
           model: gpt-4o-mini-2024-07-18
           temperature: 0.7
           max-tokens: 1000
-      audio:
-        transcription:
-          options:
-            model: gpt-4o-mini-transcribe
-
   kafka:
     bootstrap-servers:
-      - localhost:9092
-#      - localhost:9093
-#      - localhost:9094
+      - ${KAFKA_BOOTSTRAP_SERVERS}
     consumer:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
@@ -58,33 +51,10 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       acks: -1
-  servlet:
-    multipart:
-      enabled: true
-      max-request-size: 15MB
-      max-file-size: 15MB
-
-#springdoc:
-##  api-docs:
-##    path: /api-docs
-#  swagger-ui:
-#    path: /api
-#    operations-sorter: alpha
-#    tags-sorter: alpha
-#    disable-swagger-default-url: true
-
-logging:
-  level:
-    org.springdoc: DEBUG
 
 jwt:
-  secret: XEFZGc13KPDVvoToqT3MgvYDK2GQcUdT2ccjXbi7UQB
+  secret: ${JWT_SECRET}
 
 email:
-  username: jonghuncu@gmail.com
-  password: iafp fmss ugcy gscl
-
-app:
-  audio:
-    storage:
-      path: /app/audio-storage
+  username: ${EMAIL_USERNAME}
+  password: ${EMAIL_PASSWORD}

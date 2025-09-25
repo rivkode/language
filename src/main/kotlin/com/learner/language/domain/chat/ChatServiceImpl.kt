@@ -9,7 +9,6 @@ import com.learner.language.infrastructure.chat.AudioTranscribeRepository
 import com.learner.language.infrastructure.chat.ChatRoomRepository
 import org.springframework.stereotype.Component
 import org.springframework.web.multipart.MultipartFile
-import java.time.LocalDateTime
 
 @Component
 class ChatServiceImpl(
