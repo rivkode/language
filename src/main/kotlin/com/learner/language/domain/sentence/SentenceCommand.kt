@@ -7,7 +7,8 @@ class SentenceCommand {
         val userSentence: String,
         val noun: String,
         val verb: String,
-        val adj: String
+        val adj: String,
+        val wordIds: List<Long> = listOf()
     ) {
         fun toEntity(user: User) : Sentence {
             return Sentence(

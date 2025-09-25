@@ -10,14 +10,16 @@ class SentenceDto {
         val userSentence: String,
         val noun: String,
         val verb: String,
-        val adj: String
+        val adj: String,
+        val wordIds: List<Long>
     ) {
         fun toCommand(): SentenceCommand.Register {
             return SentenceCommand.Register(
                 userSentence = userSentence,
                 noun = noun,
                 verb = verb,
-                adj= adj
+                adj= adj,
+                wordIds = wordIds
             )
         }
     }

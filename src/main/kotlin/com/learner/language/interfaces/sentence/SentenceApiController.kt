@@ -1,6 +1,8 @@
 package com.learner.language.interfaces.sentence
 
+import com.learner.language.application.feedback.FeedbackFacade
 import com.learner.language.application.sentence.SentenceFacade
+import com.learner.language.interfaces.feedback.FeedbackDto
 import com.learner.language.system.login.LoginUser
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
@@ -15,7 +17,8 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/v1/sentences")
 class SentenceApiController(
-    private val sentenceFacade: SentenceFacade
+    private val sentenceFacade: SentenceFacade,
+    private val feedbackFacade: FeedbackFacade
 ) {
 
     @PostMapping
@@ -51,4 +54,14 @@ class SentenceApiController(
         return ResponseEntity.status(HttpStatus.OK).body(response)
     }
 
+    @GetMapping("/{sentenceId}/feedback")
+    fun retrieveFeedback(
+        @LoginUser userId: Long,
+        @PathVariable("sentenceId") sentenceId: Long
+    ): ResponseEntity<FeedbackDto.RetrieveResponse> {
+        val feedbackInfo = feedbackFacade.retrieveFeedback(userId, sentenceId)
+        val response = FeedbackDto.RetrieveResponse(feedbackInfo)
+
+        return ResponseEntity.status(HttpStatus.OK).body(response)
+    }
 }

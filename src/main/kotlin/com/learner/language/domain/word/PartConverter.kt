@@ -6,13 +6,11 @@ import jakarta.persistence.Converter
 @Converter(autoApply = true)
 class PartConverter : AttributeConverter<Part, Int> {
     override fun convertToDatabaseColumn(attribute: Part?): Int {
-        return attribute?.ordinal ?: 0
+        return attribute?.order ?: Part.NOUN.order
     }
 
     override fun convertToEntityAttribute(dbData: Int?): Part {
-        return Part.entries.toTypedArray().getOrElse(dbData ?: 0) {
-            Part.NOUN
-        }
+        return Part.entries.firstOrNull { it.order == dbData } ?: Part.NOUN
     }
 
 }
