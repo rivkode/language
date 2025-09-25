@@ -1,8 +1,6 @@
 package com.learner.language.interfaces.chat
 
-import com.learner.language.domain.chat.ChatCommand
-import com.learner.language.domain.chat.ChatMessageInfo
-import com.learner.language.domain.chat.SenderType
+import com.learner.language.domain.chat.*
 import jakarta.validation.constraints.NotEmpty
 
 class ChatDto {
@@ -29,11 +27,29 @@ class ChatDto {
         }
     }
 
+    data class SpeechRequest(
+        val speechText: String
+    ) {
+        fun toCommand(): ChatCommand.Speech {
+            return ChatCommand.Speech(
+                speechText = speechText
+            )
+        }
+    }
+
     data class RegisterResponse(
         val chatMessageInfo: ChatMessageInfo
     )
 
     data class ChatListResponse(
         val chatMessageListInfo: List<ChatMessageInfo>
+    )
+
+    data class TranscribeResponse(
+        val transcribeInfo : AudioTranscribeInfo
+    )
+
+    data class SpeechResponse(
+        val audioRecordInfo : AudioRecordInfo
     )
 }
