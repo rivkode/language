@@ -9,27 +9,20 @@ server:
 spring:
   application:
     name: language
+  # Local 프로필을 기본으로 사용
+  profiles:
+    active: local
 
-  datasource:
-    url: jdbc:mysql://localhost:3306/language_db?useSSL=false&characterEncoding=UTF-8
-    username: root
-    password: root
+  # 공통 JPA 설정 (프로필별로 오버라이드 가능)
   jpa:
-    hibernate:
-      ddl-auto: update
     open-in-view: true
     properties:
       hibernate:
         default_batch_fetch_size: 1000
         global_quoted_identifiers: true
-    show-sql: true
-  data:
-    redis:
-      host: localhost
-      port: 6379
   ai:
     openai:
-      api-key: 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
+      api-key: ${OPEN_AI_API_KEY:your-api-key-here}
       chat:
         options:
           model: gpt-4o-mini-2024-07-18
@@ -40,24 +33,7 @@ spring:
           options:
             model: gpt-4o-mini-transcribe
 
-  kafka:
-    bootstrap-servers:
-      - localhost:9092
-#      - localhost:9093
-#      - localhost:9094
-    consumer:
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      auto-offset-reset: latest
-      properties:
-        spring.json.trusted.packages: "*"
-        allow.auto.create.topic: false
-    listener:
-      concurrency: 1
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      acks: -1
+  # 파일 업로드 설정
   servlet:
     multipart:
       enabled: true
@@ -73,16 +49,9 @@ spring:
 #    tags-sorter: alpha
 #    disable-swagger-default-url: true
 
-logging:
-  level:
-    org.springdoc: DEBUG
-
-jwt:
-  secret: XEFZGc13KPDVvoToqT3MgvYDK2GQcUdT2ccjXbi7UQB
-
-email:
-  username: jonghuncu@gmail.com
-  password: iafp fmss ugcy gscl
+#logging:
+#  level:
+#    org.springdoc: DEBUG
 
 app:
   audio:

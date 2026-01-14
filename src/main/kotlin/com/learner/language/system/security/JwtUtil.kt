@@ -24,7 +24,7 @@ class JwtUtil {
         val logger: Logger = LoggerFactory.getLogger("JWT 관련 로그")
     }
 
-    @Value("\${jwt.secret}")
+    @Value("\${app.jwt.secret}")
     private lateinit var secretKey: String
 
     private lateinit var key: Key
