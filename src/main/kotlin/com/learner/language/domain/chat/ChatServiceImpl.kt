@@ -105,9 +105,37 @@ class ChatServiceImpl(
         }
     }
 
-    override fun transcribeAudio(userId: Long, audioFile: MultipartFile): AudioTranscribeInfo {
+    /*
+    1. 사용자가 발화한 오디오를 입력받는다
+    2. 입력받은 오디오를 transcribe 를 통해 텍스트로 변환한다
+    3. 변환한 텍스트를 현재의 채팅방을 찾아서 올바르게 저장한다.
+     */
+    override fun transcribeAudio(userId: Long, chatRoomId: Long, audioFile: MultipartFile): AudioTranscribeInfo {
         val transcribeText = aiAudioService.transcribe(audioFile)
         val user = userReader.getUserById(userId)
+        val command = ChatCommand.Register(chatRoomId, transcribeText)
+//        val chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow()
+
+        val chatRoom: ChatRoom = if (command.chatRoomId == null) {
+            val aiChatRoomNameResponse = aiChatService.generateChatRoomName(command)
+            val aiChatRoomName = aiChatRoomNameResponse.response
+            chatRoomRepository.save(ChatRoom(user=user, name = aiChatRoomName))
+        } else {
+            chatRoomRepository.findById(command.chatRoomId).orElseThrow()
+        }
+
+        val nextSequence = getNextSequence(chatRoom.id)
+        val chatMessage = command.toEntity(
+            user = user,
+            chatRoom = chatRoom,
+            message = command.message,
+            sequence = nextSequence
+        )
+        val savedChatMessage = chatWriter.save(chatMessage)
+        chatRoom.updateLastMessageDateTime()
+        chatRoomRepository.save(chatRoom)
+//        val chatMessageInfo = ChatMessageInfo(savedChatMessage)
+
         val savedAudioTranscribe = audioTranscribeRepository.save(AudioTranscribe(text = transcribeText, user = user))
         val audioTranscribeInfo = AudioTranscribeInfo(savedAudioTranscribe)
 

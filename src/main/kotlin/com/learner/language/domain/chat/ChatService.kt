@@ -9,6 +9,6 @@ interface ChatService {
     fun getChatRoomList(userId: Long): List<ChatRoomInfo>
     fun getChatList(userId: Long, chatRoomId: Long): List<ChatMessageInfo>
     fun eventProcess(event: ChatEvent)
-    fun transcribeAudio(userId: Long, audioFile: MultipartFile): AudioTranscribeInfo
+    fun transcribeAudio(userId: Long, chatRoomId: Long, audioFile: MultipartFile): AudioTranscribeInfo
     fun speechAudio(command: ChatCommand.Speech, userId: Long): AudioRecordInfo
 }

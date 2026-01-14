@@ -28,11 +28,13 @@ class ChatDto {
     }
 
     data class SpeechRequest(
-        val speechText: String
+        val speechText: String,
+        val chatRoomId: Long
     ) {
         fun toCommand(): ChatCommand.Speech {
             return ChatCommand.Speech(
-                speechText = speechText
+                speechText = speechText,
+                chatRoomId = chatRoomId
             )
         }
     }
