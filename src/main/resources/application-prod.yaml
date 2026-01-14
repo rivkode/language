@@ -51,10 +51,9 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       acks: -1
-
-jwt:
-  secret: ${JWT_SECRET}
-
-email:
-  username: ${EMAIL_USERNAME}
-  password: ${EMAIL_PASSWORD}
+app:
+  jwt:
+    secret: ${APP_JWT_SECRET}
+  email:
+    username: ${APP_EMAIL_USERNAME}
+    password: ${APP_EMAIL_PASSWORD}

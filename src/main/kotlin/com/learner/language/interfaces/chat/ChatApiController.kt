@@ -54,6 +54,7 @@ class ChatApiController(
     )
     fun transcribeChat(
         @LoginUser userId: Long,
+        @RequestParam chatRoomId: Long,
         @RequestPart("audio") audioFile: MultipartFile,
         request: HttpServletRequest
     ): ResponseEntity<ChatDto.TranscribeResponse> {
@@ -71,7 +72,7 @@ class ChatApiController(
         println("Remote Address: ${request.remoteAddr}")
         println("======================")
 
-        val transcribeInfo = chatFacade.transcribeAudio(userId, audioFile)
+        val transcribeInfo = chatFacade.transcribeAudio(userId, chatRoomId, audioFile)
         val response = ChatDto.TranscribeResponse(transcribeInfo)
 
         return ResponseEntity.status(HttpStatus.OK).body(response)
@@ -90,5 +91,15 @@ class ChatApiController(
 
         return ResponseEntity.status(HttpStatus.OK).body(response)
     }
+
+//    @PostMapping(
+//        "/paraphrase"
+//    )
+//    fun paraphrase(
+//        @LoginUser userId: Long,
+//        @Valid @RequestBody paraphraseRequest: ChatDto.ParaphraseRequest
+//    ): ResponseEntity<ChatDto.ParaphraseResponse> {
+//
+//    }
 
 }

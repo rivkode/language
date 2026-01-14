@@ -11,10 +11,10 @@ import java.util.*
 @Configuration
 class EmailConfig {
 
-    @Value("\${email.username}")
+    @Value("\${app.email.username}")
     val emailUsername: String = ""
 
-    @Value("\${email.password}")
+    @Value("\${app.email.password}")
     val emailPassword: String = ""
 
     @Bean

@@ -32,8 +32,8 @@ class ChatFacade(
         return chatRoomListInfo
     }
 
-    fun transcribeAudio(userId: Long, audioFile: MultipartFile): AudioTranscribeInfo  {
-        val audioTranscribeInfo = chatService.transcribeAudio(userId, audioFile)
+    fun transcribeAudio(userId: Long, chatRoomId: Long, audioFile: MultipartFile): AudioTranscribeInfo  {
+        val audioTranscribeInfo = chatService.transcribeAudio(userId, chatRoomId, audioFile)
 
         return audioTranscribeInfo
     }
