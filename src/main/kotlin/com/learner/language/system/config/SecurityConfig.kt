@@ -80,7 +80,8 @@ class SecurityConfig(
                     "/swagger-ui/index.html",
                     "/v3/api-docs/**",
                     "/api-docs/**",
-                    "/audio/**"
+                    "/audio/**",
+                    "/welcome/**"
                 ).permitAll()
                 it.anyRequest().authenticated()
             }

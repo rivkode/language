@@ -14,4 +14,7 @@ interface ChatRoomRepository : JpaRepository<ChatRoom, Long> {
 
     @Query(value = "SELECT * FROM chat_room WHERE user_id = :userId ORDER BY last_message_date_time DESC", nativeQuery = true)
     fun findByUserIdAndLastMessageDateTimeDesc(@Param("userId") userId: Long): List<ChatRoom>
+
+    @Query(value = "SELECT * FROM chat_room WHERE user_id = :userId AND persona_type = :personaType", nativeQuery = true)
+    fun findByUserIdAndPersonaType(@Param("userId") userId: Long, @Param("personaType") personaType: Int): ChatRoom
 }

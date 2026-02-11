@@ -1,6 +1,9 @@
 package com.learner.language.interfaces.chat
 
+import com.learner.language.domain.audio.AudioSpeechInfo
+import com.learner.language.domain.audio.AudioTranscribeInfo
 import com.learner.language.domain.chat.*
+import com.learner.language.domain.prompt.PersonaType
 import jakarta.validation.constraints.NotEmpty
 
 class ChatDto {
@@ -18,23 +21,25 @@ class ChatDto {
     }
 
     data class GenerateRequest(
-        val chatRoomId: Long
+        val chatRoomId: Long,
+        val personaType: PersonaType,
     ) {
         fun toCommand(): ChatCommand.Generate {
             return ChatCommand.Generate(
                 chatRoomId = chatRoomId,
+                personaType = personaType
             )
         }
     }
 
     data class SpeechRequest(
         val speechText: String,
-        val chatRoomId: Long
+        val chatId: Long
     ) {
         fun toCommand(): ChatCommand.Speech {
             return ChatCommand.Speech(
                 speechText = speechText,
-                chatRoomId = chatRoomId
+                chatId = chatId
             )
         }
     }
@@ -52,6 +57,6 @@ class ChatDto {
     )
 
     data class SpeechResponse(
-        val audioRecordInfo : AudioRecordInfo
+        val audioSpeechInfo : AudioSpeechInfo
     )
 }

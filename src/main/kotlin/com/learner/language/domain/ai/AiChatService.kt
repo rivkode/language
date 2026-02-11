@@ -4,9 +4,11 @@ import com.learner.language.domain.chat.ChatCommand
 import com.learner.language.domain.chat.ChatMessage
 import com.learner.language.domain.chat.ChatRoom
 import com.learner.language.domain.chat.ChatWriter
+import com.learner.language.domain.chat.SenderType
 import com.learner.language.domain.feedback.Feedback
 import com.learner.language.domain.feedback.FeedbackCommand
 import com.learner.language.domain.feedback.FeedbackWriter
+import com.learner.language.domain.prompt.PersonaType
 import com.learner.language.domain.sentence.Sentence
 import com.learner.language.domain.user.User
 import com.learner.language.system.exception.BadRequestException
@@ -25,7 +27,14 @@ class AiChatService(
     private val chatWriter: ChatWriter,
 ) {
     fun generate(aiChatRequest: AiChatCommand.AiRequest): AiChatCommand.ChatResponse {
-        val prompt = aiPromptService.createPrompt(aiChatRequest)
+        val prompt = aiChatRequest.createPrompt(aiPromptService)
+        val result = chatClient.prompt(prompt).call().content()
+            ?: throw BadRequestException(ErrorCode.BAD_REQUEST, "result is null")
+        return AiChatCommand.ChatResponse(result)
+    }
+
+    fun generateGreeting(aiChatRequest: AiChatCommand.AiRequest): AiChatCommand.ChatResponse {
+        val prompt = aiChatRequest.createPrompt(aiPromptService)
         val result = chatClient.prompt(prompt).call().content()
             ?: throw BadRequestException(ErrorCode.BAD_REQUEST, "result is null")
         return AiChatCommand.ChatResponse(result)
@@ -37,6 +46,7 @@ class AiChatService(
             noun = command.noun,
             verb = command.verb,
             adj = command.adj,
+            personaType = PersonaType.TEACHER
         )
 
         val response = generate(aiRequest)
@@ -48,7 +58,8 @@ class AiChatService(
 
     fun generateChat(command: ChatCommand.Generate, user: User, chatRoom: ChatRoom, chatHistory: String, nextSequence: Int): ChatMessage {
         val aiRequest = AiChatCommand.AiRequest.ChatRequest(
-            input = chatHistory
+            input = chatHistory,
+            personaType = command.personaType
         )
         val response = generate(aiRequest)
         logger.info { "ai answer response generateChat: ${response.response}" }
@@ -58,9 +69,22 @@ class AiChatService(
         return chatMessage
     }
 
+    fun greetingChat(personaType: PersonaType, user: User, chatRoom: ChatRoom, chatHistory: String, nextSequence: Int): ChatMessage {
+        val aiRequest = AiChatCommand.AiRequest.ChatRequest(
+            input = chatHistory,
+            personaType = personaType,
+        )
+        val response = generateGreeting(aiRequest)
+        logger.info { "ai answer response greetingChat: ${response.response}" }
+        val chatMessage = ChatMessage(user = user, chatRoom = chatRoom, message = response.response, senderType = SenderType.AI, sequence = nextSequence)
+
+        return chatMessage
+    }
+
     fun generateChatRoomName(command: ChatCommand.Register): AiChatCommand.ChatResponse {
         val aiRequest = AiChatCommand.AiRequest.ChatRoomNameRequest(
-            input = command.message
+            input = command.message,
+            personaType = PersonaType.COWORKER
         )
         val response = generate(aiRequest)
         logger.info { "ai answer response generateChatRoomName: ${response.response}" }

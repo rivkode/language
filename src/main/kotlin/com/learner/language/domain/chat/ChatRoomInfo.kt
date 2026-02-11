@@ -3,11 +3,13 @@ package com.learner.language.domain.chat
 class ChatRoomInfo(
     val chatRoomId: Long,
     val name: String,
+    val personaType: String,
     val lastMessageDateTime: String
 ) {
     constructor(chatRoom: ChatRoom): this(
         chatRoomId = chatRoom.id,
         name = chatRoom.name,
+        personaType = chatRoom.personaType.name,
         lastMessageDateTime = chatRoom.lastMessageDateTime.toString()
     )
 

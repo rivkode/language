@@ -11,7 +11,7 @@ class SentenceDto {
         val noun: String,
         val verb: String,
         val adj: String,
-        val wordIds: List<Long>
+        val wordIds: List<Long>,
     ) {
         fun toCommand(): SentenceCommand.Register {
             return SentenceCommand.Register(
@@ -35,5 +35,4 @@ class SentenceDto {
     data class RetrieveResponse(
         val sentenceInfo: SentenceInfo
     )
-
 }

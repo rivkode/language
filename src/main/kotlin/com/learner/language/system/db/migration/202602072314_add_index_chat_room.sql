@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX uq_chat_room_user_persona ON chat_room (user_id, persona_type);

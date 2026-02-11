@@ -92,14 +92,16 @@ class ChatApiController(
         return ResponseEntity.status(HttpStatus.OK).body(response)
     }
 
-//    @PostMapping(
-//        "/paraphrase"
-//    )
-//    fun paraphrase(
-//        @LoginUser userId: Long,
-//        @Valid @RequestBody paraphraseRequest: ChatDto.ParaphraseRequest
-//    ): ResponseEntity<ChatDto.ParaphraseResponse> {
-//
-//    }
+    @PostMapping("/greeting")
+    fun greeting(
+        @LoginUser userId: Long,
+        @Valid @RequestBody generateRequest: ChatDto.GenerateRequest
+    ): ResponseEntity<ChatDto.RegisterResponse> {
+        val command = generateRequest.toCommand()
+        val chatInfo = chatFacade.greetingChat(userId, command)
+        val response = ChatDto.RegisterResponse(chatInfo)
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response)
+    }
 
 }
