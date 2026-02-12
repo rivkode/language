@@ -2,10 +2,16 @@ package com.learner.language.domain.chat
 
 import com.learner.language.domain.ai.AiAudioService
 import com.learner.language.domain.ai.AiChatService
+import com.learner.language.domain.audio.AudioSpeech
+import com.learner.language.domain.audio.AudioSpeechInfo
+import com.learner.language.domain.audio.AudioTranscribe
+import com.learner.language.domain.audio.AudioTranscribeInfo
 import com.learner.language.domain.event.ChatEvent
+import com.learner.language.domain.prompt.PersonaType
 import com.learner.language.domain.user.UserReader
-import com.learner.language.infrastructure.chat.AudioRecordRepository
-import com.learner.language.infrastructure.chat.AudioTranscribeRepository
+import com.learner.language.infrastructure.audio.AudioSpeechRepository
+import com.learner.language.infrastructure.audio.AudioTranscribeRepository
+import com.learner.language.infrastructure.chat.ChatAudioSpeechMatchRepository
 import com.learner.language.infrastructure.chat.ChatRoomRepository
 import org.springframework.stereotype.Component
 import org.springframework.web.multipart.MultipartFile
@@ -19,14 +25,15 @@ class ChatServiceImpl(
     private val aiChatService: AiChatService,
     private val aiAudioService: AiAudioService,
     private val audioTranscribeRepository: AudioTranscribeRepository,
-    private val audioRecordRepository: AudioRecordRepository
+    private val audioSpeechRepository: AudioSpeechRepository,
+    private val chatAudioSpeechMatchRepository: ChatAudioSpeechMatchRepository,
 ): ChatService {
     override fun saveChat(command: ChatCommand.Register, userId: Long): ChatMessageInfo {
         val user = userReader.getUserById(userId)
         val chatRoom: ChatRoom = if (command.chatRoomId == null) {
             val aiChatRoomNameResponse = aiChatService.generateChatRoomName(command)
             val aiChatRoomName = aiChatRoomNameResponse.response
-            chatRoomRepository.save(ChatRoom(user=user, name = aiChatRoomName))
+            chatRoomRepository.save(ChatRoom(user=user, name = aiChatRoomName, PersonaType.CHILD))
         } else {
             chatRoomRepository.findById(command.chatRoomId).orElseThrow()
         }
@@ -63,13 +70,32 @@ class ChatServiceImpl(
         val chatRoomList = chatRoomRepository.findByUserIdAndLastMessageDateTimeDesc(userId)
         val chatRoomListInfo = ChatRoomInfo.from(chatRoomList)
 
-
         return chatRoomListInfo
     }
 
     override fun getChatList(userId: Long, chatRoomId: Long): List<ChatMessageInfo> {
         val chatList = chatReader.getChatMessageListByChatRoomId(chatRoomId)
-        val chatListInfo = ChatMessageInfo.from(chatList)
+        val chatIds = chatList.map { it.id }
+        val audioSpeechList =
+            if (chatIds.isEmpty()) {
+                emptyList()
+            } else {
+                audioSpeechRepository.findAllByChatIds(chatIds)
+            }
+        val chatAudioSpeechMatchList = chatAudioSpeechMatchRepository.findAllByChatIds(chatList.map { it.id })
+        val audioSpeechMapById =
+            audioSpeechList.associateBy { it.id }
+
+        val chatIdToAudioSpeechMap =
+            chatAudioSpeechMatchList
+                .mapNotNull { match ->
+                    audioSpeechMapById[match.audioSpeechId]?.let {
+                        match.chatId to it
+                    }
+                }
+                .toMap()
+
+        val chatListInfo = ChatMessageInfo.from(chatList, chatIdToAudioSpeechMap)
 
         return chatListInfo
     }
@@ -119,7 +145,7 @@ class ChatServiceImpl(
         val chatRoom: ChatRoom = if (command.chatRoomId == null) {
             val aiChatRoomNameResponse = aiChatService.generateChatRoomName(command)
             val aiChatRoomName = aiChatRoomNameResponse.response
-            chatRoomRepository.save(ChatRoom(user=user, name = aiChatRoomName))
+            chatRoomRepository.save(ChatRoom(user=user, name = aiChatRoomName, personaType = PersonaType.CHILD))
         } else {
             chatRoomRepository.findById(command.chatRoomId).orElseThrow()
         }
@@ -134,7 +160,6 @@ class ChatServiceImpl(
         val savedChatMessage = chatWriter.save(chatMessage)
         chatRoom.updateLastMessageDateTime()
         chatRoomRepository.save(chatRoom)
-//        val chatMessageInfo = ChatMessageInfo(savedChatMessage)
 
         val savedAudioTranscribe = audioTranscribeRepository.save(AudioTranscribe(text = transcribeText, user = user))
         val audioTranscribeInfo = AudioTranscribeInfo(savedAudioTranscribe)
@@ -142,16 +167,51 @@ class ChatServiceImpl(
         return audioTranscribeInfo
     }
 
-    override fun speechAudio(command: ChatCommand.Speech, userId: Long): AudioRecordInfo {
+    override fun speechAudio(command: ChatCommand.Speech, userId: Long): AudioSpeechInfo {
         val speechText = command.speechText
         val user = userReader.getUserById(userId)
         val speechAudioFilePath = aiAudioService.speechAudio(speechText, userId)
-        val audioRecord =
-            AudioRecord(speechText = speechText, filePath = speechAudioFilePath, user = user)
-        val savedAudioRecord = audioRecordRepository.save(audioRecord)
-        val audioRecordInfo = AudioRecordInfo(savedAudioRecord)
+        val audioSpeech =
+            AudioSpeech(text = speechText, filePath = speechAudioFilePath, user = user)
+        val savedAudioRecord = audioSpeechRepository.save(audioSpeech)
+        chatAudioSpeechMatchRepository.save(ChatAudioSpeechMatch(command.chatId, savedAudioRecord.id))
+        val audioSpeechInfo = AudioSpeechInfo(savedAudioRecord)
 
-        return audioRecordInfo
+        return audioSpeechInfo
     }
 
+    override fun saveChatRoom(
+        userId: Long,
+        command: ChatRoomCommand.Register
+    ): ChatRoomInfo {
+        val user = userReader.getUserById(userId)
+        val chatRoom = command.toEntity(user)
+        val savedChatRoom = chatRoomRepository.save(chatRoom)
+
+        return ChatRoomInfo(chatRoom = savedChatRoom)
+    }
+
+    /*
+    1. 페르소나별로 응답 생성이 달라져야 한다
+    2. 모든 응답은 음성 입력 출력으로 이루어져야 한다
+    3. 채팅방 빠른 조회를 위해 userId, personaType 컬럼으로 인덱스를 생성한다 O
+    4. 자연스러운 흐름을 위해 프런트에서 텍스트를 먼저 생성하고 이후에 음성을 알려준다
+    5. 텍스트 생성시 물흐르듯 효과를 사용해서 생성한다
+     */
+    override fun greetingChat(
+        userId: Long,
+        command: ChatCommand.Generate
+    ): ChatMessageInfo {
+        val user = userReader.getUserById(userId)
+        val chatRoomId = command.chatRoomId
+        val chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow()
+        val chatMessageList = chatReader.getChatMessageListByChatRoomId(chatRoomId)
+        val chatHistory = toHistory(chatMessageList)
+        val nextSequence = getNextSequence(chatRoomId)
+        val chatMessage = aiChatService.greetingChat(command.personaType, user, chatRoom, chatHistory, nextSequence)
+        val savedChatMessage = chatWriter.save(chatMessage)
+        val chatMessageInfo = ChatMessageInfo(savedChatMessage)
+
+        return chatMessageInfo
+    }
 }

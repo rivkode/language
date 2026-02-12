@@ -1,6 +1,7 @@
 package com.learner.language.domain.chat
 
 import com.learner.language.common.BaseEntity
+import com.learner.language.domain.audio.AudioSpeech
 import com.learner.language.domain.user.User
 import jakarta.persistence.*
 
@@ -28,5 +29,26 @@ class ChatMessage(
 ): BaseEntity()
 
 enum class SenderType {
-    USER, AI, SYSTEM
+    USER {
+        override fun toInfo(
+            chatMessage: ChatMessage,
+            audioRecordMap: Map<Long, AudioSpeech>
+        ): ChatMessageInfo =
+            ChatMessageInfo(chatMessage)
+    },
+    AI {
+        override fun toInfo(
+            chatMessage: ChatMessage,
+            audioRecordMap: Map<Long, AudioSpeech>
+        ): ChatMessageInfo {
+            val audioRecord = audioRecordMap[chatMessage.id]
+                ?: throw IllegalStateException("AI message without audio")
+            return ChatMessageInfo.from(chatMessage, audioRecord)
+        }
+    };
+
+    abstract fun toInfo(
+        chatMessage: ChatMessage,
+        audioRecordMap: Map<Long, AudioSpeech>
+    ): ChatMessageInfo
 }

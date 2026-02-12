@@ -1,4 +1,4 @@
-package com.learner.language.domain.chat
+package com.learner.language.domain.audio
 
 class AudioTranscribeInfo(
     val userId: Long,

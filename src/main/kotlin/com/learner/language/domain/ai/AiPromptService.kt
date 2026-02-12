@@ -1,5 +1,6 @@
 package com.learner.language.domain.ai
 
+import com.learner.language.infrastructure.prompt.PromptRepository
 import org.springframework.ai.chat.messages.Message
 import org.springframework.ai.chat.prompt.Prompt
 import org.springframework.ai.chat.prompt.PromptTemplate
@@ -12,7 +13,6 @@ import org.springframework.stereotype.Service
 class AiPromptService(
     @Value("classpath:prompts/system-feedback-message-0515.st")
     private val systemFeedbackResource: Resource,
-//    @Value("classpath:prompts/system-chat-message-0811.st")
     @Value("classpath:prompts/system-chat-message-0112-gpt.st") // gpt
     private val systemChatResource: Resource,
     @Value("classpath:prompts/system-chatroomname-message.st")
@@ -23,6 +23,7 @@ class AiPromptService(
     private val userChatResource: Resource,
     @Value("classpath:prompts/user-chatroomname-message.st")
     private val userChatRoomNameResource: Resource,
+    private val promptRepository: PromptRepository,
 ) {
     private fun createUserFeedbackMessage(userInput: String, noun: String, verb: String, adj: String): Message {
         return PromptTemplate(userFeedbackResource).createMessage(
@@ -56,8 +57,8 @@ class AiPromptService(
         SystemPromptTemplate(systemFeedbackResource).createMessage(
         )
 
-    private fun createSystemChatMessage(): Message =
-        SystemPromptTemplate(systemChatResource).createMessage(
+    private fun createSystemChatMessage(prompt: String): Message =
+        SystemPromptTemplate(prompt).createMessage(
         )
 
     private fun createSystemChatRoomNameMessage(): Message =
@@ -67,6 +68,7 @@ class AiPromptService(
 
 
     fun createPrompt(aiChatRequest: AiChatCommand.AiRequest): Prompt {
+        val prompt = promptRepository.findByPersonaType(aiChatRequest.personaType.type).prompt
         return when (aiChatRequest) {
             is AiChatCommand.AiRequest.FeedbackRequest -> {
                 Prompt(
@@ -88,7 +90,7 @@ class AiPromptService(
                         createUserChatMessage(
                             aiChatRequest.input
                         ),
-                        createSystemChatMessage()
+                        createSystemChatMessage(prompt)
                     )
                 )
             }

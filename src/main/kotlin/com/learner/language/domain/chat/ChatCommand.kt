@@ -1,5 +1,6 @@
 package com.learner.language.domain.chat
 
+import com.learner.language.domain.prompt.PersonaType
 import com.learner.language.domain.user.User
 
 class ChatCommand {
@@ -20,6 +21,7 @@ class ChatCommand {
 
     data class Generate(
         val chatRoomId: Long,
+        val personaType: PersonaType
     ) {
         fun toEntity(user: User, chatRoom: ChatRoom, message: String, sequence: Int): ChatMessage {
             return ChatMessage(
@@ -34,7 +36,7 @@ class ChatCommand {
 
     data class Speech(
         val speechText: String,
-        val chatRoomId: Long,
+        val chatId: Long,
     ) {
     }
 }
