@@ -41,6 +41,17 @@ class AiChatCommand {
                 return aiPromptService.createPrompt(this)
             }
         }
+
+        data class PhraseRequest(
+            val history: String,
+            val currentAnswer: String,
+            override val personaType: PersonaType,
+            override val input: String = currentAnswer,
+        ) : AiRequest(input, personaType) {
+            override fun createPrompt(aiPromptService: AiPromptService): Prompt {
+                return aiPromptService.createPrompt(this)
+            }
+        }
     }
 
     data class ChatResponse(

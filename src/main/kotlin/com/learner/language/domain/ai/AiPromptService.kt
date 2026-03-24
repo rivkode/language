@@ -1,5 +1,6 @@
 package com.learner.language.domain.ai
 
+import com.learner.language.domain.prompt.PersonaType
 import com.learner.language.infrastructure.prompt.PromptRepository
 import org.springframework.ai.chat.messages.Message
 import org.springframework.ai.chat.prompt.Prompt
@@ -15,12 +16,16 @@ class AiPromptService(
     private val systemFeedbackResource: Resource,
     @Value("classpath:prompts/system-chat-message-0112-gpt.st") // gpt
     private val systemChatResource: Resource,
+    @Value("classpath:prompts/system-phrase-message.st")
+    private val systemPhraseResource: Resource,
     @Value("classpath:prompts/system-chatroomname-message.st")
     private val systemChatRoomNameResource: Resource,
     @Value("classpath:prompts/user-feedback-message-0515.st")
     private val userFeedbackResource: Resource,
     @Value("classpath:prompts/user-chat-message.st")
     private val userChatResource: Resource,
+    @Value("classpath:prompts/user-phrase-message.st")
+    private val userPhraseResource: Resource,
     @Value("classpath:prompts/user-chatroomname-message.st")
     private val userChatRoomNameResource: Resource,
     private val promptRepository: PromptRepository,
@@ -44,6 +49,15 @@ class AiPromptService(
         )
     }
 
+    private fun createUserPhraseMessage(history: String, currentAnswer: String): Message {
+        return PromptTemplate(userPhraseResource).createMessage(
+            mapOf(
+                "history" to history,
+                "current_answer" to currentAnswer,
+            )
+        )
+    }
+
     private fun createUserChatRoomNameMessage(message: String): Message {
         return PromptTemplate(userChatRoomNameResource).createMessage(
             mapOf(
@@ -61,6 +75,13 @@ class AiPromptService(
         SystemPromptTemplate(prompt).createMessage(
         )
 
+    private fun createSystemPhraseMessage(personaType: PersonaType): Message =
+        SystemPromptTemplate(systemPhraseResource).createMessage(
+            mapOf(
+                "persona" to toKoreanPersona(personaType)
+            )
+        )
+
     private fun createSystemChatRoomNameMessage(): Message =
         SystemPromptTemplate(systemChatRoomNameResource).createMessage(
         )
@@ -68,7 +89,6 @@ class AiPromptService(
 
 
     fun createPrompt(aiChatRequest: AiChatCommand.AiRequest): Prompt {
-        val prompt = promptRepository.findByPersonaType(aiChatRequest.personaType.type).prompt
         return when (aiChatRequest) {
             is AiChatCommand.AiRequest.FeedbackRequest -> {
                 Prompt(
@@ -85,6 +105,7 @@ class AiPromptService(
             }
 
             is AiChatCommand.AiRequest.ChatRequest -> {
+                val prompt = promptRepository.findByPersonaType(aiChatRequest.personaType.type).prompt
                 Prompt(
                     listOf(
                         createUserChatMessage(
@@ -105,6 +126,27 @@ class AiPromptService(
                     )
                 )
             }
+
+            is AiChatCommand.AiRequest.PhraseRequest -> {
+                Prompt(
+                    listOf(
+                        createUserPhraseMessage(
+                            aiChatRequest.history,
+                            aiChatRequest.currentAnswer
+                        ),
+                        createSystemPhraseMessage(aiChatRequest.personaType)
+                    )
+                )
+            }
+        }
+    }
+
+    private fun toKoreanPersona(personaType: PersonaType): String {
+        return when (personaType) {
+            PersonaType.CHILD -> "아이처럼 친근하고 다정한 말투"
+            PersonaType.FRIEND -> "가까운 친구처럼 편안한 말투"
+            PersonaType.COWORKER -> "동료처럼 자연스럽고 예의 있는 말투"
+            PersonaType.TEACHER -> "선생님처럼 차분하고 배려 있는 말투"
         }
     }
 }

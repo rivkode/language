@@ -40,6 +40,13 @@ class AiChatService(
         return AiChatCommand.ChatResponse(result)
     }
 
+    fun generateParagraph(aiChatRequest: AiChatCommand.AiRequest): AiChatCommand.ChatResponse {
+        val prompt = aiChatRequest.createPrompt(aiPromptService)
+        val result = chatClient.prompt(prompt).call().content()
+            ?: throw BadRequestException(ErrorCode.BAD_REQUEST, "result is null")
+        return AiChatCommand.ChatResponse(result)
+    }
+
     fun generateFeedback(user: User, sentence: Sentence, command: FeedbackCommand.Generate): Feedback {
         val aiRequest = AiChatCommand.AiRequest.FeedbackRequest(
             input = command.userSentence,
@@ -79,6 +86,25 @@ class AiChatService(
         val chatMessage = ChatMessage(user = user, chatRoom = chatRoom, message = response.response, senderType = SenderType.AI, sequence = nextSequence)
 
         return chatMessage
+    }
+
+    fun phraseChat(
+        personaType: PersonaType,
+        user: User,
+        chatRoom: ChatRoom,
+        previousHistory: String,
+        currentAnswer: String,
+        nextSequence: Int
+    ): ChatMessage {
+        val aiRequest = AiChatCommand.AiRequest.PhraseRequest(
+            history = previousHistory,
+            currentAnswer = currentAnswer,
+            personaType = personaType,
+        )
+        val response = generateParagraph(aiRequest)
+        logger.info { "ai answer response phraseChat: ${response.response}" }
+
+        return ChatMessage(user = user, chatRoom = chatRoom, message = response.response, senderType = SenderType.AI, sequence = nextSequence)
     }
 
     fun generateChatRoomName(command: ChatCommand.Register): AiChatCommand.ChatResponse {
