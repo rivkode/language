@@ -15,6 +15,13 @@ import org.springframework.web.multipart.MultipartFile
 class ChatApiController(
     private val chatFacade: ChatFacade
 ) {
+    @GetMapping("/hello")
+    fun hello(): ResponseEntity<ChatDto.HelloResponse> {
+        val response = ChatDto.HelloResponse(chatFacade.hello())
+
+        return ResponseEntity.status(HttpStatus.OK).body(response)
+    }
+
     @PostMapping
     fun registerChat(
         @LoginUser userId: Long,
@@ -99,6 +106,17 @@ class ChatApiController(
     ): ResponseEntity<ChatDto.RegisterResponse> {
         val command = generateRequest.toCommand()
         val chatInfo = chatFacade.greetingChat(userId, command)
+        val response = ChatDto.RegisterResponse(chatInfo)
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response)
+    }
+
+    @PostMapping("/paraphrase")
+    fun phrase(
+        @Valid @RequestBody phraseRequest: ChatDto.PhraseRequest
+    ): ResponseEntity<ChatDto.RegisterResponse> {
+        val command = phraseRequest.toCommand()
+        val chatInfo = chatFacade.phraseChat(command)
         val response = ChatDto.RegisterResponse(chatInfo)
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response)

@@ -39,4 +39,10 @@ class ChatCommand {
         val chatId: Long,
     ) {
     }
+
+    data class Phrase(
+        val chatRoomId: Long,
+        val chatId: Long,
+        val userId: Long,
+    )
 }

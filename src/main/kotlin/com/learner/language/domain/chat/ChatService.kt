@@ -3,9 +3,12 @@ package com.learner.language.domain.chat
 import com.learner.language.domain.audio.AudioSpeechInfo
 import com.learner.language.domain.audio.AudioTranscribeInfo
 import com.learner.language.domain.event.ChatEvent
+import com.learner.language.domain.prompt.PersonaType
+import com.learner.language.domain.user.User
 import org.springframework.web.multipart.MultipartFile
 
 interface ChatService {
+    fun hello(): String
     fun saveChat(command: ChatCommand.Register, userId: Long): ChatMessageInfo
     fun generateChat(command: ChatCommand.Generate, userId: Long): ChatMessageInfo
     fun getChatRoomList(userId: Long): List<ChatRoomInfo>
@@ -15,4 +18,16 @@ interface ChatService {
     fun speechAudio(command: ChatCommand.Speech, userId: Long): AudioSpeechInfo
     fun saveChatRoom(userId: Long, command: ChatRoomCommand.Register): ChatRoomInfo
     fun greetingChat(userId: Long, command: ChatCommand.Generate): ChatMessageInfo
+    fun createGreetingChatMessage(
+        user: User,
+        chatRoom: ChatRoom,
+        personaType: PersonaType,
+        chatMessageList: List<ChatMessage>
+    ): ChatMessage
+    fun createPhraseChatMessage(
+        user: User,
+        chatRoom: ChatRoom,
+        currentChatMessage: ChatMessage,
+        previousChatMessages: List<ChatMessage>
+    ): ChatMessage
 }

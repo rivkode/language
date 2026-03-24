@@ -21,6 +21,7 @@ import java.util.*
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.clearMocks
+import org.springframework.test.util.ReflectionTestUtils
 
 class ChatServiceTest : BehaviorSpec({
 
@@ -124,6 +125,44 @@ class ChatServiceTest : BehaviorSpec({
                     aiChatService.generateChat(any(), any(), any(), any(), any())
                 }
                 verify(exactly = 1) { chatWriter.save(any()) }
+            }
+        }
+    }
+
+    Given("createParaphraseChatMessage 메서드는") {
+        val userId = 1L
+        val chatRoomId = 100L
+        val personaType = PersonaType.CHILD
+
+        every { passwordEncoder.encodePassword(any()) } returns "123456789"
+        val user = UserFixture.createUser(passwordEncoder = passwordEncoder).also {
+            ReflectionTestUtils.setField(it, "id", userId)
+        }
+        val chatRoom = ChatFixture.createChatRoom(id = chatRoomId, user = user, personaType = personaType)
+        val previousChatMessages = listOf(
+            ChatFixture.createChatMessage(id = 1L, user = user, chatRoom = chatRoom, senderType = SenderType.AI, message = "안녕", sequence = 1),
+            ChatFixture.createChatMessage(id = 2L, user = user, chatRoom = chatRoom, senderType = SenderType.USER, message = "저는 학생이에요", sequence = 2),
+            ChatFixture.createChatMessage(id = 3L, user = user, chatRoom = chatRoom, senderType = SenderType.AI, message = "무슨 공부해요?", sequence = 3),
+            ChatFixture.createChatMessage(id = 4L, user = user, chatRoom = chatRoom, senderType = SenderType.USER, message = "한국어 공부해요", sequence = 4)
+        )
+        val currentChatMessage =
+            ChatFixture.createChatMessage(id = 5L, user = user, chatRoom = chatRoom, senderType = SenderType.USER, message = "발음이 아직 어려워요", sequence = 5)
+        val aiChatMessage =
+            ChatFixture.createChatMessage(id = 6L, user = user, chatRoom = chatRoom, senderType = SenderType.AI, message = "천천히 연습하면 좋아질 거예요", sequence = 6)
+
+        When("현재 사용자 메시지와 직전 히스토리로 phrase 응답을 생성하면") {
+            every { chatReader.getLastChatMessageByChatRoomId(chatRoomId) } returns currentChatMessage
+            every {
+                aiChatService.phraseChat(eq(personaType), eq(user), eq(chatRoom), any(), eq(currentChatMessage.message), eq(6))
+            } returns aiChatMessage
+
+            val result = chatServiceImpl.createPhraseChatMessage(user, chatRoom, currentChatMessage, previousChatMessages)
+
+            Then("현재 메시지를 포함한 히스토리로 AI 응답을 생성한다") {
+                result.message shouldBe aiChatMessage.message
+                verify(exactly = 1) {
+                    aiChatService.phraseChat(eq(personaType), eq(user), eq(chatRoom), any(), eq(currentChatMessage.message), eq(6))
+                }
             }
         }
     }
