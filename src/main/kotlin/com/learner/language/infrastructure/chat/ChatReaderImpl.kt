@@ -4,9 +4,7 @@ import com.learner.language.domain.chat.ChatMessage
 import com.learner.language.domain.chat.ChatReader
 import com.learner.language.domain.chat.ChatRoom
 import jakarta.persistence.EntityManager
-import jakarta.persistence.criteria.Predicate
 import org.springframework.stereotype.Component
-import java.time.LocalDateTime
 
 @Component
 class ChatReaderImpl(
@@ -30,20 +28,15 @@ class ChatReaderImpl(
     }
 
     override fun getLastChatMessageByChatRoomId(chatRoomId: Long): ChatMessage? {
-        val cb = entityManager.criteriaBuilder
-        val query = cb.createQuery(ChatMessage::class.java)
-        val root = query.from(ChatMessage::class.java)
-        val predicates = mutableListOf<Predicate>()
-        predicates.add(cb.equal(root.get<ChatRoom>("chatRoom").get<Long>("id"), chatRoomId))
+        return chatRepository.findLastMessage(chatRoomId)
+    }
 
-        query.select(root).where(
-            *predicates.toTypedArray()
-        ).orderBy(cb.desc(root.get<LocalDateTime>("createdAt")))
+    override fun getChatMessageById(chatId: Long): ChatMessage {
+        return chatRepository.findById(chatId).orElseThrow()
+    }
 
-        val typedQuery = entityManager.createQuery(query)
-        typedQuery.maxResults = 1
-        val results = typedQuery.resultList
-
-        return results.firstOrNull()
+    override fun getPreviousChatMessages(chatRoomId: Long, sequence: Int, limit: Int): List<ChatMessage> {
+        return chatRepository.findPreviousMessages(chatRoomId, sequence, limit)
+            .sortedBy { it.sequence }
     }
 }
