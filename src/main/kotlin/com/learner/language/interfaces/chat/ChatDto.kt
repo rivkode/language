@@ -44,6 +44,20 @@ class ChatDto {
         }
     }
 
+    data class PhraseRequest(
+        val chatRoomId: Long,
+        val chatId: Long,
+        val userId: Long,
+    ) {
+        fun toCommand(): ChatCommand.Phrase {
+            return ChatCommand.Phrase(
+                chatRoomId = chatRoomId,
+                chatId = chatId,
+                userId = userId
+            )
+        }
+    }
+
     data class RegisterResponse(
         val chatMessageInfo: ChatMessageInfo
     )
@@ -58,5 +72,9 @@ class ChatDto {
 
     data class SpeechResponse(
         val audioSpeechInfo : AudioSpeechInfo
+    )
+
+    data class HelloResponse(
+        val message: String
     )
 }
