@@ -53,7 +53,7 @@ spring:
 #  level:
 #    org.springdoc: DEBUG
 
-app:
-  audio:
-    storage:
-      path: /app/audio-storage
+#app:
+##  audio:
+##    storage:
+##      path: /app/audio-storage

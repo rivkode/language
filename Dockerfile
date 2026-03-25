@@ -2,6 +2,10 @@
 FROM eclipse-temurin:17-jdk-jammy AS builder
 WORKDIR /app
 
+# Scouter Agent 다운로드 (버전은 최신으로 조정 가능)
+ADD https://github.com/scouter-project/scouter/releases/download/v2.20.0/scouter-all-2.20.0.tar.gz /app/scouter.tar.gz
+RUN tar -xvf scouter.tar.gz && rm scouter.tar.gz
+
 # Gradle Wrapper 및 설정 복사 (캐시 효율화)
 COPY gradlew .
 COPY gradle gradle
@@ -18,6 +22,15 @@ FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 ENV TZ=Asia/Seoul
 
+# 에이전트 복사
+#COPY --from=builder /app/scouter/agent.java /app/scouter-agent
+# agent.java 디렉토리 자체가 아니라 jar만 정확히 복사
+COPY --from=builder /app/scouter/agent.java/scouter.agent.jar /app/scouter-agent/scouter.agent.jar
+COPY --from=builder /app/scouter/agent.java/conf /app/scouter-agent/conf
+
+# 기본 설정 파일(scouter.conf) 생성 - 뒤의 Deployment에서 환경변수로 덮어쓸 예정
+#RUN touch /app/scouter-agent/conf/scouter.conf
+
 # 오디오 저장 디렉토리 생성 및 권한 설정
 RUN mkdir -p /app/audio-storage
 RUN chmod 755 /app/audio-storage
@@ -25,6 +38,7 @@ RUN chmod 755 /app/audio-storage
 # root 유저 사용 방지 (보안 권장사항)
 RUN useradd -m springuser
 RUN chown -R springuser:springuser /app/audio-storage
+RUN chown -R springuser:springuser /app/scouter-agent
 USER springuser
 
 # 빌드된 JAR 복사 (빌드 단계에서 생성된 특정 jar만 지정)
