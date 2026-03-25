@@ -3,6 +3,8 @@ package com.learner.language.testutils
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.learner.language.testutils.config.TestUtilConfig
 import com.learner.language.testutils.persistence.SentencePersistenceUtils
+import com.learner.language.testutils.persistence.ClipLearningPersistenceUtils
+import com.learner.language.testutils.persistence.ProfilePersistenceUtils
 import com.learner.language.testutils.persistence.UserPersistenceUtils
 import com.learner.language.testutils.persistence.WordPersistenceUtils
 import io.kotest.core.extensions.Extension
@@ -37,6 +39,12 @@ abstract class IntegrationTest : BehaviorSpec() {
 
     @Autowired
     protected lateinit var sentencePersistenceUtils: SentencePersistenceUtils
+
+    @Autowired
+    protected lateinit var profilePersistenceUtils: ProfilePersistenceUtils
+
+    @Autowired
+    protected lateinit var clipLearningPersistenceUtils: ClipLearningPersistenceUtils
 
     override suspend fun beforeSpec(spec: Spec) {
         super.beforeSpec(spec)
