@@ -1,8 +1,10 @@
 package com.learner.language.interfaces.user
 
+import com.learner.language.domain.user.PublicUserProfileInfo
 import com.learner.language.domain.user.UserCommand
 import com.learner.language.domain.user.UserInfo
 import jakarta.validation.constraints.NotEmpty
+import java.time.Instant
 
 class UserDto {
     data class RegisterRequest(
@@ -44,12 +46,50 @@ class UserDto {
     }
 
     data class InfoResponse(
+        val id: Long,
+        val userId: Long,
         val username: String,
-        val email: String
+        val email: String,
+        val avatarUrl: String?,
+        val provider: String,
+        val createdAt: Instant,
     ) {
         constructor(userInfo: UserInfo): this(
+            id = userInfo.id,
+            userId = userInfo.id,
             username = userInfo.username,
-            email = userInfo.email
+            email = userInfo.email,
+            avatarUrl = userInfo.avatarUrl,
+            provider = userInfo.provider,
+            createdAt = userInfo.createdAt,
+        )
+    }
+
+    data class PublicProfileResponse(
+        val id: Long,
+        val userId: Long,
+        val username: String,
+        val avatarUrl: String?,
+        val provider: String,
+        val createdAt: Instant,
+        val diaryCount: Long,
+        val followerCount: Long,
+        val followingCount: Long,
+        val isFollowing: Boolean,
+        val bio: String?,
+    ) {
+        constructor(info: PublicUserProfileInfo) : this(
+            id = info.id,
+            userId = info.userId,
+            username = info.username,
+            avatarUrl = info.avatarUrl,
+            provider = info.provider,
+            createdAt = info.createdAt,
+            diaryCount = info.diaryCount,
+            followerCount = info.followerCount,
+            followingCount = info.followingCount,
+            isFollowing = info.isFollowing,
+            bio = info.bio,
         )
     }
 

@@ -19,7 +19,7 @@ class UserDetailsImpl(
         return listOf(SimpleGrantedAuthority(authority))
     }
 
-    override fun getPassword(): String = user.password.password
+    override fun getPassword(): String = user.password?.password ?: ""
 
     override fun getUsername(): String = user.username
 

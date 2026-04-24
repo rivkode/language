@@ -22,6 +22,30 @@ enum class ErrorCode(
     // 409
     ALREADY_EXISTS("AF901"), // 이미 존재하는 리소스
     CONCURRENCY("AF902"), // 선착순 마감
+    // OAuth
+    OAUTH_AUTHORIZATION_FAILED("AF601"), // provider 가 error 반환 또는 code 누락
+    OAUTH_STATE_INVALID("AF602"), // state 쿠키 누락 또는 불일치
+    OAUTH_PROVIDER_ERROR("AF603"), // provider 호출 실패 (5xx, 타임아웃, 4xx)
+    OAUTH_EMAIL_REQUIRED("AF604"), // provider 가 email scope 미동의
+    OAUTH_EMAIL_CONFLICT("AF605"), // 동일 이메일이 다른 가입 경로로 이미 존재
+    OAUTH_CODE_INVALID("AF606"), // exchange 시 code 가 없거나 만료/소비됨
+    OAUTH_CONFIGURATION_MISSING("AF607"), // properties 누락 (startup 검증 실패)
+    // Diary
+    DIARY_NOT_FOUND("AF701"),
+    DIARY_FORBIDDEN("AF702"),
+    INVALID_LINE_COUNT("AF703"),
+    INVALID_LINE_LENGTH("AF704"),
+    INVALID_TAG_COUNT("AF705"),
+    INVALID_TAG_LENGTH("AF706"),
+    // Comment
+    COMMENT_NOT_FOUND("AF721"),
+    COMMENT_TOO_LONG("AF722"),
+    COMMENT_FORBIDDEN("AF723"),
+    // AI validation
+    VALIDATION_FAILED("AF731"),
+    VALIDATION_TIMEOUT("AF732"),
+    // Refresh/logout
+    REFRESH_TOKEN_INVALID("AF741"),
     // 500
     SERVICE_UNAVAILABLE("AF998"), // 서비스 이용 불가
     INTERNAL_SERVER_ERROR("AF999"); // 서버 내부 에러
