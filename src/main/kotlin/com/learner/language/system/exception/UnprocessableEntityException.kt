@@ -1,6 +1,6 @@
 package com.learner.language.system.exception
 
-open class BadRequestException(
+open class UnprocessableEntityException(
     errorCode: ErrorCode,
     message: String,
     publicCode: String = errorCode.name,

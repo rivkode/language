@@ -1,6 +1,6 @@
 package com.learner.language.system.exception
 
-open class BadRequestException(
+open class ForbiddenException(
     errorCode: ErrorCode,
     message: String,
     publicCode: String = errorCode.name,

@@ -14,6 +14,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
+import com.learner.language.system.config.CorsProperties
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 import org.springframework.web.filter.CorsFilter
@@ -76,6 +77,9 @@ class SecurityConfig(
                     "/api/v1/users",
                     "/api/v1/users/validation-email",
                     "/api/v1/users/validation-number",
+                    "/api/v1/auth/oauth/*/start",
+                    "/api/v1/auth/oauth/*/callback",
+                    "/api/v1/auth/exchange",
                     "/swagger-ui/**",
                     "/swagger-ui/index.html",
                     "/v3/api-docs/**",
@@ -90,14 +94,14 @@ class SecurityConfig(
     }
 
     @Bean
-    fun corsFilter(): CorsFilter {
+    fun corsFilter(corsProperties: CorsProperties): CorsFilter {
         val config = CorsConfiguration().apply {
-            allowedOriginPatterns = listOf("*")
-            allowCredentials = false
-            allowedMethods = listOf("*")
-            allowedHeaders = listOf("*")
-            exposedHeaders = listOf("Authorization")
-            maxAge = 3600L
+            allowedOrigins = corsProperties.allowedOrigins
+            allowCredentials = corsProperties.allowCredentials
+            allowedMethods = corsProperties.allowedMethods
+            allowedHeaders = corsProperties.allowedHeaders
+            exposedHeaders = corsProperties.exposedHeaders
+            maxAge = corsProperties.maxAge
         }
         val source = UrlBasedCorsConfigurationSource()
         source.registerCorsConfiguration("/**", config)

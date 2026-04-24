@@ -9,4 +9,10 @@ interface UserService {
     fun checkEmailDuplicate(email: String)
     fun validateNumber(request: UserDto.ValidateNumberRequest)
     fun getUser(userId: Long?): UserInfo
+    fun createOAuthUser(
+        email: String,
+        username: String,
+        provider: AuthProvider,
+        providerExternalId: String,
+    ): User
 }

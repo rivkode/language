@@ -1,5 +1,5 @@
 # 1단계: 빌드 (JDK 필요)
-FROM eclipse-temurin:17-jdk-jammy AS builder
+FROM eclipse-temurin:21-jdk-jammy AS builder
 WORKDIR /app
 
 # Scouter Agent 다운로드 (버전은 최신으로 조정 가능)
@@ -18,7 +18,7 @@ RUN chmod +x gradlew
 RUN ./gradlew bootJar --no-daemon
 
 # 2단계: 실행 (실행 시에는 JRE만 있어도 충분하여 용량이 줄어듭니다)
-FROM eclipse-temurin:17-jre-jammy
+FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 ENV TZ=Asia/Seoul
 
