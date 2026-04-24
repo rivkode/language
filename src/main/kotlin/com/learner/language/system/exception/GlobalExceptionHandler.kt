@@ -4,6 +4,8 @@ import com.learner.language.application.auth.RefreshTokenInvalidException
 import com.learner.language.application.validation.ValidationFailedException
 import com.learner.language.application.validation.ValidationTimeoutException
 import com.learner.language.domain.auth.OAuthAuthenticationException
+import com.learner.language.domain.diarychat.exception.ChatroomParticipantLimitException
+import com.learner.language.domain.diarychat.exception.PollCursorExpiredException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -62,6 +64,16 @@ class GlobalExceptionHandler {
     fun refreshTokenInvalid(e: RefreshTokenInvalidException): ResponseEntity<ExceptionResponse> =
         ResponseEntity.status(HttpStatus.UNAUTHORIZED)
             .body(ExceptionResponse(e.message ?: "refresh token 이 유효하지 않습니다.", e.publicCode))
+
+    @ExceptionHandler(ChatroomParticipantLimitException::class)
+    fun chatroomLimit(e: ChatroomParticipantLimitException): ResponseEntity<ExceptionResponse> =
+        ResponseEntity.status(HttpStatus.CONFLICT)
+            .body(ExceptionResponse(e.message ?: "채팅방 정원이 가득 찼습니다.", e.publicCode))
+
+    @ExceptionHandler(PollCursorExpiredException::class)
+    fun pollCursorExpired(e: PollCursorExpiredException): ResponseEntity<ExceptionResponse> =
+        ResponseEntity.status(HttpStatus.GONE)
+            .body(ExceptionResponse(e.message ?: "폴링 커서가 만료되었습니다.", e.publicCode))
 
     @ExceptionHandler(LanguageException::class)
     fun languageEx(e: LanguageException): ResponseEntity<ExceptionResponse> =
