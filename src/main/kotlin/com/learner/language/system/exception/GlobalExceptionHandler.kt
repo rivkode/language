@@ -1,5 +1,7 @@
 package com.learner.language.system.exception
 
+import com.learner.language.application.validation.ValidationFailedException
+import com.learner.language.application.validation.ValidationTimeoutException
 import com.learner.language.domain.auth.OAuthAuthenticationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -44,6 +46,16 @@ class GlobalExceptionHandler {
     fun unprocessableEx(e: UnprocessableEntityException): ResponseEntity<ExceptionResponse> =
         ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
             .body(ExceptionResponse(e.message ?: "요청을 처리할 수 없습니다.", e.publicCode))
+
+    @ExceptionHandler(ValidationTimeoutException::class)
+    fun validationTimeout(e: ValidationTimeoutException): ResponseEntity<ExceptionResponse> =
+        ResponseEntity.status(HttpStatus.GATEWAY_TIMEOUT)
+            .body(ExceptionResponse(e.message ?: "AI 응답 지연", e.publicCode))
+
+    @ExceptionHandler(ValidationFailedException::class)
+    fun validationFailed(e: ValidationFailedException): ResponseEntity<ExceptionResponse> =
+        ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(ExceptionResponse(e.message ?: "AI 검증 실패", e.publicCode))
 
     @ExceptionHandler(LanguageException::class)
     fun languageEx(e: LanguageException): ResponseEntity<ExceptionResponse> =
