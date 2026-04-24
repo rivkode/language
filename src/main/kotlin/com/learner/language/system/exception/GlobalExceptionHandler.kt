@@ -1,5 +1,6 @@
 package com.learner.language.system.exception
 
+import com.learner.language.application.auth.RefreshTokenInvalidException
 import com.learner.language.application.validation.ValidationFailedException
 import com.learner.language.application.validation.ValidationTimeoutException
 import com.learner.language.domain.auth.OAuthAuthenticationException
@@ -56,6 +57,11 @@ class GlobalExceptionHandler {
     fun validationFailed(e: ValidationFailedException): ResponseEntity<ExceptionResponse> =
         ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body(ExceptionResponse(e.message ?: "AI 검증 실패", e.publicCode))
+
+    @ExceptionHandler(RefreshTokenInvalidException::class)
+    fun refreshTokenInvalid(e: RefreshTokenInvalidException): ResponseEntity<ExceptionResponse> =
+        ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            .body(ExceptionResponse(e.message ?: "refresh token 이 유효하지 않습니다.", e.publicCode))
 
     @ExceptionHandler(LanguageException::class)
     fun languageEx(e: LanguageException): ResponseEntity<ExceptionResponse> =

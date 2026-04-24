@@ -80,6 +80,7 @@ class SecurityConfig(
                     "/api/v1/auth/oauth/*/start",
                     "/api/v1/auth/oauth/*/callback",
                     "/api/v1/auth/exchange",
+                    "/api/v1/auth/refresh",
                     "/swagger-ui/**",
                     "/swagger-ui/index.html",
                     "/v3/api-docs/**",

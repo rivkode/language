@@ -44,6 +44,8 @@ enum class ErrorCode(
     // AI validation
     VALIDATION_FAILED("AF731"),
     VALIDATION_TIMEOUT("AF732"),
+    // Refresh/logout
+    REFRESH_TOKEN_INVALID("AF741"),
     // 500
     SERVICE_UNAVAILABLE("AF998"), // 서비스 이용 불가
     INTERNAL_SERVER_ERROR("AF999"); // 서버 내부 에러
