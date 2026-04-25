@@ -9,4 +9,5 @@ interface DiaryChatReader {
     fun findMessagesAfter(roomId: Long, after: Long): List<DiaryChatMessage>
     fun findLastMessageId(roomId: Long): Long
     fun findMessageById(messageId: Long): DiaryChatMessage?
+    fun findMessageCreatedAtById(messageId: Long): java.time.LocalDateTime?
 }

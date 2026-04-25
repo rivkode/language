@@ -54,7 +54,7 @@ class DiaryChatMessageFacade(
         room.touchActivity()
         chatWriter.saveRoom(room)
 
-        pollingHub.notifyRoom(room.id) { assembler.pollForRoom(room.id, saved.id - 1) }
+        pollingHub.notifyRoom(room.id) { after -> assembler.pollForRoom(room.id, after) }
 
         val author = authorResolver.resolve(listOf(command.authorUserId))[command.authorUserId]
             ?: authorResolver.aiAuthor()

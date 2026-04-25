@@ -48,7 +48,7 @@ class DiaryChatRoomFacade(
         )
         chatWriter.incrementParticipantCount(room.id)
         writeEvent(room.id, DiaryChatEventType.PARTICIPANT_JOINED, mapOf("userId" to command.requesterUserId))
-        pollingHub.notifyRoom(room.id) { pollViewAssembler.pollForRoom(room.id, afterInit(room.id)) }
+        pollingHub.notifyRoom(room.id) { after -> pollViewAssembler.pollForRoom(room.id, after) }
 
         val refreshed = chatReader.getRoomById(room.id)
         return toRoomView(refreshed)
@@ -87,7 +87,7 @@ class DiaryChatRoomFacade(
         )
         chatWriter.incrementParticipantCount(roomId)
         writeEvent(roomId, DiaryChatEventType.PARTICIPANT_JOINED, mapOf("userId" to userId))
-        pollingHub.notifyRoom(roomId) { pollViewAssembler.pollForRoom(roomId, chatReader.findLastMessageId(roomId) - 1) }
+        pollingHub.notifyRoom(roomId) { after -> pollViewAssembler.pollForRoom(roomId, after) }
 
         return toRoomView(chatReader.getRoomById(roomId))
     }
@@ -104,7 +104,7 @@ class DiaryChatRoomFacade(
         if (removed > 0) {
             chatWriter.decrementParticipantCount(roomId)
             writeEvent(roomId, DiaryChatEventType.PARTICIPANT_LEFT, mapOf("userId" to userId))
-            pollingHub.notifyRoom(roomId) { pollViewAssembler.pollForRoom(roomId, chatReader.findLastMessageId(roomId) - 1) }
+            pollingHub.notifyRoom(roomId) { after -> pollViewAssembler.pollForRoom(roomId, after) }
         }
     }
 
@@ -119,7 +119,7 @@ class DiaryChatRoomFacade(
         room.updateAiAssistant(enabled)
         chatWriter.saveRoom(room)
         writeEvent(roomId, DiaryChatEventType.AI_TOGGLE_CHANGED, mapOf("enabled" to enabled))
-        pollingHub.notifyRoom(roomId) { pollViewAssembler.pollForRoom(roomId, chatReader.findLastMessageId(roomId) - 1) }
+        pollingHub.notifyRoom(roomId) { after -> pollViewAssembler.pollForRoom(roomId, after) }
 
         return toRoomView(room)
     }
@@ -127,11 +127,6 @@ class DiaryChatRoomFacade(
     private fun writeEvent(roomId: Long, type: DiaryChatEventType, payload: Map<String, Any?>) {
         val body = payload + mapOf("type" to type.apiValue())
         chatWriter.appendEvent(roomId, type, objectMapper.writeValueAsString(body))
-    }
-
-    private fun afterInit(roomId: Long): Long {
-        val last = chatReader.findLastMessageId(roomId)
-        return (last - 1).coerceAtLeast(0)
     }
 
     private fun toRoomView(room: DiaryChatRoom): DiaryChatRoomView = DiaryChatRoomView(

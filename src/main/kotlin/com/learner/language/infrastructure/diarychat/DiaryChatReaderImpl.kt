@@ -41,4 +41,7 @@ class DiaryChatReaderImpl(
 
     override fun findMessageById(messageId: Long): DiaryChatMessage? =
         messageRepository.findById(messageId).orElse(null)
+
+    override fun findMessageCreatedAtById(messageId: Long): java.time.LocalDateTime? =
+        messageRepository.findCreatedAtById(messageId)
 }
