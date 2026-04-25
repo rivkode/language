@@ -10,4 +10,5 @@ interface DiaryChatReader {
     fun findLastMessageId(roomId: Long): Long
     fun findMessageById(messageId: Long): DiaryChatMessage?
     fun findMessageCreatedAtById(messageId: Long): java.time.LocalDateTime?
+    fun findRecentNonSystemMessages(roomId: Long, limit: Int): List<DiaryChatMessage>
 }

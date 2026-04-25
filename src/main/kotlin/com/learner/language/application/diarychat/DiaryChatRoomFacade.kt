@@ -11,6 +11,7 @@ import com.learner.language.domain.diarychat.DiaryChatWriter
 import com.learner.language.domain.diarychat.exception.ChatroomForbiddenException
 import com.learner.language.domain.diarychat.exception.ChatroomNotFoundException
 import com.learner.language.domain.diarychat.exception.ChatroomParticipantLimitException
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.ZoneOffset
@@ -24,6 +25,7 @@ class DiaryChatRoomFacade(
     private val pollingHub: DiaryChatPollingHub,
     private val objectMapper: ObjectMapper,
     private val pollViewAssembler: DiaryChatPollViewAssembler,
+    private val eventPublisher: ApplicationEventPublisher,
 ) {
 
     @Transactional
@@ -49,6 +51,8 @@ class DiaryChatRoomFacade(
         chatWriter.incrementParticipantCount(room.id)
         writeEvent(room.id, DiaryChatEventType.PARTICIPANT_JOINED, mapOf("userId" to command.requesterUserId))
         pollingHub.notifyRoom(room.id) { after -> pollViewAssembler.pollForRoom(room.id, after) }
+
+        eventPublisher.publishEvent(DiaryChatRoomCreatedEvent(room.id))
 
         val refreshed = chatReader.getRoomById(room.id)
         return toRoomView(refreshed)

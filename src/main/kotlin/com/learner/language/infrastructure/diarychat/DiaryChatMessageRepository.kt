@@ -47,4 +47,16 @@ interface DiaryChatMessageRepository : JpaRepository<DiaryChatMessage, Long> {
     @Modifying
     @Query("DELETE FROM DiaryChatMessage m WHERE m.createdAt < :cutoff")
     fun deleteOlderThan(@Param("cutoff") cutoff: LocalDateTime): Int
+
+    @Query(
+        """
+        SELECT m FROM DiaryChatMessage m
+        WHERE m.roomId = :roomId AND m.source <> com.learner.language.domain.diarychat.DiaryChatMessageSource.SYSTEM
+        ORDER BY m.id DESC
+        """
+    )
+    fun findRecentNonSystem(
+        @Param("roomId") roomId: Long,
+        pageable: Pageable,
+    ): List<com.learner.language.domain.diarychat.DiaryChatMessage>
 }

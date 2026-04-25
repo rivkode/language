@@ -7,6 +7,7 @@ import com.learner.language.domain.diarychat.DiaryChatRoom
 import com.learner.language.domain.diarychat.DiaryChatWriter
 import com.learner.language.domain.diarychat.exception.ChatroomForbiddenException
 import com.learner.language.domain.diarychat.exception.ChatroomMessageTooLongException
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -17,6 +18,7 @@ class DiaryChatMessageFacade(
     private val assembler: DiaryChatPollViewAssembler,
     private val authorResolver: DiaryChatAuthorResolver,
     private val pollingHub: DiaryChatPollingHub,
+    private val eventPublisher: ApplicationEventPublisher,
 ) {
 
     data class HistoryResult(
@@ -55,6 +57,8 @@ class DiaryChatMessageFacade(
         chatWriter.saveRoom(room)
 
         pollingHub.notifyRoom(room.id) { after -> assembler.pollForRoom(room.id, after) }
+
+        eventPublisher.publishEvent(DiaryChatUserMessagePostedEvent(room.id, saved.id))
 
         val author = authorResolver.resolve(listOf(command.authorUserId))[command.authorUserId]
             ?: authorResolver.aiAuthor()

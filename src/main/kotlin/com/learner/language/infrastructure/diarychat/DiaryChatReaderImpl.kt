@@ -44,4 +44,7 @@ class DiaryChatReaderImpl(
 
     override fun findMessageCreatedAtById(messageId: Long): java.time.LocalDateTime? =
         messageRepository.findCreatedAtById(messageId)
+
+    override fun findRecentNonSystemMessages(roomId: Long, limit: Int): List<DiaryChatMessage> =
+        messageRepository.findRecentNonSystem(roomId, PageRequest.of(0, limit))
 }
