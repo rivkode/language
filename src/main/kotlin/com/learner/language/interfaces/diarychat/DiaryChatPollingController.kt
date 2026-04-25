@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.context.request.async.DeferredResult
 
 @RestController
-@RequestMapping("/api/v1/chatrooms/{roomId}/messages")
+@RequestMapping("/api/v1/diary-chatrooms/{roomId}/messages")
 class DiaryChatPollingController(
     private val facade: DiaryChatPollingFacade,
 ) {

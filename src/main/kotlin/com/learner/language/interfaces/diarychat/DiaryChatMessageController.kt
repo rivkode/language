@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/api/v1/chatrooms/{roomId}/messages")
+@RequestMapping("/api/v1/diary-chatrooms/{roomId}/messages")
 class DiaryChatMessageController(
     private val facade: DiaryChatMessageFacade,
 ) {
