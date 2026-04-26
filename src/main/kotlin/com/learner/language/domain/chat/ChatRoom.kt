@@ -27,6 +27,13 @@ class ChatRoom(
     @Column
     var personaType: PersonaType,
 
+    @Convert(converter = ChatContextTypeConverter::class)
+    @Column(name = "context_type", nullable = false)
+    var contextType: ChatContextType = ChatContextType.GENERAL,
+
+    @Column(name = "video_id")
+    var videoId: String? = null,
+
     @Column(name = "last_message_date_time")
     var lastMessageDateTime: LocalDateTime = LocalDateTime.now()
 
@@ -35,7 +42,11 @@ class ChatRoom(
         this.lastMessageDateTime = LocalDateTime.now()
     }
 
-    constructor(user: User, personaType: PersonaType) : this(user, "name", personaType, LocalDateTime.now()) {
+    constructor(
+        user: User,
+        personaType: PersonaType,
+        contextType: ChatContextType = ChatContextType.GENERAL,
+        videoId: String? = null
+    ) : this(user, "name", personaType, contextType, videoId, LocalDateTime.now()) {
     }
 }
-

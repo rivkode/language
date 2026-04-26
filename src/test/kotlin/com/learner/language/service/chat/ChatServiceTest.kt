@@ -2,7 +2,11 @@ package com.learner.language.service.chat
 
 import com.learner.language.domain.ai.AiAudioService
 import com.learner.language.domain.ai.AiChatService
+import com.learner.language.domain.chat.ChatContextType
 import com.learner.language.domain.chat.*
+import com.learner.language.domain.cliplearning.ClipLearningTranscriptInfo
+import com.learner.language.domain.cliplearning.ClipLearningTranscriptItemInfo
+import com.learner.language.domain.cliplearning.ClipLearningTranscriptReader
 import com.learner.language.domain.prompt.PersonaType
 import com.learner.language.domain.user.UserReader
 import com.learner.language.infrastructure.audio.AudioSpeechRepository
@@ -35,18 +39,19 @@ class ChatServiceTest : BehaviorSpec({
     val audioTranscribeRepository = mockk<AudioTranscribeRepository>()
     val audioSpeechRepository = mockk<AudioSpeechRepository>()
     val chatAudioSpeechMatchRepository = mockk<ChatAudioSpeechMatchRepository>()
+    val clipLearningTranscriptReader = mockk<ClipLearningTranscriptReader>()
     val passwordEncoder = mockk<CustomPasswordEncoder>()
 
     // 테스트 대상 클래스 생성
     val chatServiceImpl = ChatServiceImpl(
         chatWriter, chatReader, chatRoomRepository, userReader,
         aiChatService, aiAudioService, audioTranscribeRepository,
-        audioSpeechRepository, chatAudioSpeechMatchRepository
+        audioSpeechRepository, chatAudioSpeechMatchRepository, clipLearningTranscriptReader
     )
 
     // 테스트가 끝날 때마다 Mock 초기화 (권장)
     afterTest {
-        clearMocks(chatWriter, chatReader, chatRoomRepository, userReader, aiChatService)
+        clearMocks(chatWriter, chatReader, chatRoomRepository, userReader, aiChatService, clipLearningTranscriptReader)
     }
 
     Given("AI 채팅 시작(greetingChat) 시나리오에서") {
@@ -125,6 +130,61 @@ class ChatServiceTest : BehaviorSpec({
                     aiChatService.generateChat(any(), any(), any(), any(), any())
                 }
                 verify(exactly = 1) { chatWriter.save(any()) }
+            }
+        }
+    }
+
+    Given("영상 transcript 컨텍스트 채팅방에서 generateChat 메서드는") {
+        val userId = 1L
+        val chatRoomId = 200L
+        val chatId = 10L
+        val personaType = PersonaType.TEACHER
+        val videoId = "Kkx6-9AJTY0"
+
+        every { passwordEncoder.encodePassword(any()) } returns "123456789"
+        val user = UserFixture.createUser(passwordEncoder = passwordEncoder)
+        val chatRoom = ChatFixture.createChatRoom(
+            id = chatRoomId,
+            user = user,
+            personaType = personaType,
+            contextType = ChatContextType.VIDEO_TRANSCRIPT,
+            videoId = videoId
+        )
+
+        val command = ChatCommand.Generate(chatRoomId = chatRoomId, personaType = personaType)
+        val aiChatMessage = ChatFixture.createChatMessage(chatId, user, chatRoom, SenderType.AI)
+        val transcript = ClipLearningTranscriptInfo(
+            videoId = videoId,
+            languagePriority = listOf("ko", "en"),
+            count = 1,
+            items = listOf(
+                ClipLearningTranscriptItemInfo(
+                    text = "안녕하세요. 오늘은 카페에서 주문하는 표현을 배워요.",
+                    start = 7.632,
+                    duration = 5.031
+                )
+            )
+        )
+
+        When("채팅방이 VIDEO_TRANSCRIPT 타입이면") {
+            every { userReader.getUserById(userId) } returns user
+            every { chatRoomRepository.findById(chatRoomId) } returns Optional.of(chatRoom)
+            every { chatReader.getChatMessageListByChatRoomId(chatRoomId) } returns emptyList()
+            every { chatReader.getLastChatMessageByChatRoomId(chatRoomId) } returns null
+            every { clipLearningTranscriptReader.retrieveTranscript(videoId) } returns transcript
+            every {
+                aiChatService.generateTranscriptChat(eq(command), eq(user), eq(chatRoom), any(), any(), any())
+            } returns aiChatMessage
+            every { chatWriter.save(any()) } returns aiChatMessage
+
+            val result = chatServiceImpl.generateChat(command, userId)
+
+            Then("transcript 컨텍스트를 조회한 뒤 transcript-aware 응답을 생성해야 한다") {
+                result.message shouldBe "Test Message"
+                verify(exactly = 1) { clipLearningTranscriptReader.retrieveTranscript(videoId) }
+                verify(exactly = 1) {
+                    aiChatService.generateTranscriptChat(eq(command), eq(user), eq(chatRoom), any(), any(), any())
+                }
             }
         }
     }

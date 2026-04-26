@@ -6,6 +6,8 @@ import com.learner.language.domain.audio.AudioSpeech
 import com.learner.language.domain.audio.AudioSpeechInfo
 import com.learner.language.domain.audio.AudioTranscribe
 import com.learner.language.domain.audio.AudioTranscribeInfo
+import com.learner.language.domain.cliplearning.ClipLearningTranscriptInfo
+import com.learner.language.domain.cliplearning.ClipLearningTranscriptReader
 import com.learner.language.domain.event.ChatEvent
 import com.learner.language.domain.prompt.PersonaType
 import com.learner.language.domain.user.User
@@ -30,6 +32,7 @@ class ChatServiceImpl(
     private val audioTranscribeRepository: AudioTranscribeRepository,
     private val audioSpeechRepository: AudioSpeechRepository,
     private val chatAudioSpeechMatchRepository: ChatAudioSpeechMatchRepository,
+    private val clipLearningTranscriptReader: ClipLearningTranscriptReader,
 ): ChatService {
     override fun hello(): String {
         return "hello"
@@ -43,6 +46,11 @@ class ChatServiceImpl(
     ): ChatMessage {
         val chatHistory = toHistory(chatMessageList)
         val nextSequence = getNextSequence(chatMessageList)
+
+        if (chatRoom.contextType == ChatContextType.VIDEO_TRANSCRIPT) {
+            val transcriptContext = buildTranscriptContext(chatRoom)
+            return aiChatService.greetingTranscriptChat(personaType, user, chatRoom, chatHistory, transcriptContext, nextSequence)
+        }
 
         return aiChatService.greetingChat(personaType, user, chatRoom, chatHistory, nextSequence)
     }
@@ -101,7 +109,12 @@ class ChatServiceImpl(
         val chatMessageList = chatReader.getChatMessageListByChatRoomId(command.chatRoomId)
         val chatHistory = toHistory(chatMessageList)
         val nextSequence = getNextSequence(command.chatRoomId)
-        val chatMessage = aiChatService.generateChat(command, user, chatRoom, chatHistory, nextSequence)
+        val chatMessage = if (chatRoom.contextType == ChatContextType.VIDEO_TRANSCRIPT) {
+            val transcriptContext = buildTranscriptContext(chatRoom)
+            aiChatService.generateTranscriptChat(command, user, chatRoom, chatHistory, transcriptContext, nextSequence)
+        } else {
+            aiChatService.generateChat(command, user, chatRoom, chatHistory, nextSequence)
+        }
         val savedChatMessage = chatWriter.save(chatMessage)
         val chatMessageInfo = ChatMessageInfo(savedChatMessage)
 
@@ -209,7 +222,7 @@ class ChatServiceImpl(
             message = command.message,
             sequence = nextSequence
         )
-        val savedChatMessage = chatWriter.save(chatMessage)
+        chatWriter.save(chatMessage)
         chatRoom.updateLastMessageDateTime()
         chatRoomRepository.save(chatRoom)
 
@@ -236,6 +249,7 @@ class ChatServiceImpl(
         userId: Long,
         command: ChatRoomCommand.Register
     ): ChatRoomInfo {
+        validateChatRoomCommand(command)
         val user = userReader.getUserById(userId)
         val chatRoom = command.toEntity(user)
         val savedChatRoom = chatRoomRepository.save(chatRoom)
@@ -260,10 +274,58 @@ class ChatServiceImpl(
         val chatMessageList = chatReader.getChatMessageListByChatRoomId(chatRoomId)
         val chatHistory = toHistory(chatMessageList)
         val nextSequence = getNextSequence(chatRoomId)
-        val chatMessage = aiChatService.greetingChat(command.personaType, user, chatRoom, chatHistory, nextSequence)
+        val chatMessage = if (chatRoom.contextType == ChatContextType.VIDEO_TRANSCRIPT) {
+            val transcriptContext = buildTranscriptContext(chatRoom)
+            aiChatService.greetingTranscriptChat(command.personaType, user, chatRoom, chatHistory, transcriptContext, nextSequence)
+        } else {
+            aiChatService.greetingChat(command.personaType, user, chatRoom, chatHistory, nextSequence)
+        }
         val savedChatMessage = chatWriter.save(chatMessage)
         val chatMessageInfo = ChatMessageInfo(savedChatMessage)
 
         return chatMessageInfo
+    }
+
+    private fun validateChatRoomCommand(command: ChatRoomCommand.Register) {
+        when (command.contextType) {
+            ChatContextType.GENERAL -> {
+                if (!command.youtubeVideoId.isNullOrBlank()) {
+                    throw BadRequestException(ErrorCode.BAD_REQUEST, "GENERAL chat room does not accept youtubeVideoId")
+                }
+            }
+            ChatContextType.VIDEO_TRANSCRIPT -> {
+                val youtubeVideoId = command.youtubeVideoId?.trim()
+                    ?: throw BadRequestException(ErrorCode.BAD_REQUEST, "VIDEO_TRANSCRIPT chat room requires youtubeVideoId")
+                if (youtubeVideoId.isBlank()) {
+                    throw BadRequestException(ErrorCode.BAD_REQUEST, "VIDEO_TRANSCRIPT chat room requires youtubeVideoId")
+                }
+                clipLearningTranscriptReader.retrieveTranscript(youtubeVideoId)
+            }
+        }
+    }
+
+    private fun buildTranscriptContext(chatRoom: ChatRoom): String {
+        val youtubeVideoId = chatRoom.videoId
+            ?: throw BadRequestException(ErrorCode.BAD_REQUEST, "VIDEO_TRANSCRIPT chat room requires youtubeVideoId")
+        val transcript = clipLearningTranscriptReader.retrieveTranscript(youtubeVideoId)
+        return transcript.toPromptContext()
+    }
+
+    private fun ClipLearningTranscriptInfo.toPromptContext(): String {
+        val header = buildString {
+            appendLine("videoId: $videoId")
+            appendLine("languagePriority: ${languagePriority.joinToString(", ")}")
+            appendLine("count: $count")
+            appendLine("items:")
+        }
+        val lines = items.joinToString("\n") { item ->
+            "[${formatSeconds(item.start)} +${"%.3f".format(item.duration)}s] ${item.text}"
+        }
+
+        return header + lines
+    }
+
+    private fun formatSeconds(seconds: Double): String {
+        return "%.3f".format(seconds)
     }
 }
