@@ -76,6 +76,25 @@ class AiChatService(
         return chatMessage
     }
 
+    fun generateTranscriptChat(
+        command: ChatCommand.Generate,
+        user: User,
+        chatRoom: ChatRoom,
+        chatHistory: String,
+        transcriptContext: String,
+        nextSequence: Int
+    ): ChatMessage {
+        val aiRequest = AiChatCommand.AiRequest.TranscriptChatRequest(
+            history = chatHistory,
+            transcriptContext = transcriptContext,
+            personaType = command.personaType
+        )
+        val response = generate(aiRequest)
+        logger.info { "ai answer response generateTranscriptChat: ${response.response}" }
+
+        return command.toEntity(user, chatRoom, response.response, nextSequence)
+    }
+
     fun greetingChat(personaType: PersonaType, user: User, chatRoom: ChatRoom, chatHistory: String, nextSequence: Int): ChatMessage {
         val aiRequest = AiChatCommand.AiRequest.ChatRequest(
             input = chatHistory,
@@ -86,6 +105,31 @@ class AiChatService(
         val chatMessage = ChatMessage(user = user, chatRoom = chatRoom, message = response.response, senderType = SenderType.AI, sequence = nextSequence)
 
         return chatMessage
+    }
+
+    fun greetingTranscriptChat(
+        personaType: PersonaType,
+        user: User,
+        chatRoom: ChatRoom,
+        chatHistory: String,
+        transcriptContext: String,
+        nextSequence: Int
+    ): ChatMessage {
+        val aiRequest = AiChatCommand.AiRequest.TranscriptChatRequest(
+            history = chatHistory,
+            transcriptContext = transcriptContext,
+            personaType = personaType
+        )
+        val response = generateGreeting(aiRequest)
+        logger.info { "ai answer response greetingTranscriptChat: ${response.response}" }
+
+        return ChatMessage(
+            user = user,
+            chatRoom = chatRoom,
+            message = response.response,
+            senderType = SenderType.AI,
+            sequence = nextSequence
+        )
     }
 
     fun phraseChat(
