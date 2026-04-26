@@ -1,6 +1,7 @@
 package com.learner.language.testutils.fixture
 
 import com.learner.language.domain.chat.ChatMessage
+import com.learner.language.domain.chat.ChatContextType
 import com.learner.language.domain.chat.ChatRoom
 import com.learner.language.domain.chat.SenderType
 import com.learner.language.domain.prompt.PersonaType // Corrected import
@@ -14,12 +15,16 @@ object ChatFixture {
         id: Long = 1L,
         user: User, // User is now a required parameter
         personaType: PersonaType = PersonaType.CHILD,
+        contextType: ChatContextType = ChatContextType.GENERAL,
+        videoId: String? = null,
         name: String = "Test Chat Room",
         lastMessageDateTime: LocalDateTime = LocalDateTime.now()
     ): ChatRoom {
         return ChatRoom(
             user = user,
             personaType = personaType,
+            contextType = contextType,
+            videoId = videoId,
             name = name,
             lastMessageDateTime = lastMessageDateTime
         ).apply { setId(id) }
