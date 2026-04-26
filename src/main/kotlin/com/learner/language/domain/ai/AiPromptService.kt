@@ -16,6 +16,8 @@ class AiPromptService(
     private val systemFeedbackResource: Resource,
     @Value("classpath:prompts/system-chat-message-0112-gpt.st") // gpt
     private val systemChatResource: Resource,
+    @Value("classpath:prompts/system-transcript-chat-message.st")
+    private val systemTranscriptChatResource: Resource,
     @Value("classpath:prompts/system-phrase-message.st")
     private val systemPhraseResource: Resource,
     @Value("classpath:prompts/system-chatroomname-message.st")
@@ -24,6 +26,8 @@ class AiPromptService(
     private val userFeedbackResource: Resource,
     @Value("classpath:prompts/user-chat-message.st")
     private val userChatResource: Resource,
+    @Value("classpath:prompts/user-transcript-chat-message.st")
+    private val userTranscriptChatResource: Resource,
     @Value("classpath:prompts/user-phrase-message.st")
     private val userPhraseResource: Resource,
     @Value("classpath:prompts/user-chatroomname-message.st")
@@ -58,6 +62,15 @@ class AiPromptService(
         )
     }
 
+    private fun createUserTranscriptChatMessage(history: String, transcriptContext: String): Message {
+        return PromptTemplate(userTranscriptChatResource).createMessage(
+            mapOf(
+                "history" to history,
+                "transcript_context" to transcriptContext,
+            )
+        )
+    }
+
     private fun createUserChatRoomNameMessage(message: String): Message {
         return PromptTemplate(userChatRoomNameResource).createMessage(
             mapOf(
@@ -77,6 +90,13 @@ class AiPromptService(
 
     private fun createSystemPhraseMessage(personaType: PersonaType): Message =
         SystemPromptTemplate(systemPhraseResource).createMessage(
+            mapOf(
+                "persona" to toKoreanPersona(personaType)
+            )
+        )
+
+    private fun createSystemTranscriptChatMessage(personaType: PersonaType): Message =
+        SystemPromptTemplate(systemTranscriptChatResource).createMessage(
             mapOf(
                 "persona" to toKoreanPersona(personaType)
             )
@@ -112,6 +132,18 @@ class AiPromptService(
                             aiChatRequest.input
                         ),
                         createSystemChatMessage(prompt)
+                    )
+                )
+            }
+
+            is AiChatCommand.AiRequest.TranscriptChatRequest -> {
+                Prompt(
+                    listOf(
+                        createUserTranscriptChatMessage(
+                            aiChatRequest.history,
+                            aiChatRequest.transcriptContext
+                        ),
+                        createSystemTranscriptChatMessage(aiChatRequest.personaType)
                     )
                 )
             }

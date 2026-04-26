@@ -33,6 +33,17 @@ class AiChatCommand {
             }
         }
 
+        data class TranscriptChatRequest(
+            val history: String,
+            val transcriptContext: String,
+            override val personaType: PersonaType,
+            override val input: String = history,
+        ) : AiRequest(input, personaType) {
+            override fun createPrompt(aiPromptService: AiPromptService): Prompt {
+                return aiPromptService.createPrompt(this)
+            }
+        }
+
         data class ChatRoomNameRequest(
             override val input: String,
             override val personaType: PersonaType,
