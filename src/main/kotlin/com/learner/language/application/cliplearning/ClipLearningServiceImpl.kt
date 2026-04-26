@@ -1,24 +1,22 @@
 package com.learner.language.application.cliplearning
 
 import com.learner.language.domain.cliplearning.ClipLearningClip
+import com.learner.language.domain.cliplearning.ClipLearningTranscriptReader
 import com.learner.language.domain.cliplearning.UserClipLearningProgress
 import com.learner.language.domain.cliplearning.UserSavedClip
 import com.learner.language.domain.user.UserReader
 import com.learner.language.infrastructure.cliplearning.ClipLearningClipRepository
 import com.learner.language.infrastructure.cliplearning.ClipLearningFeedQueryRepository
 import com.learner.language.infrastructure.cliplearning.ClipLearningFeedRow
-import com.learner.language.infrastructure.cliplearning.ClipLearningVocabularyRepository
 import com.learner.language.infrastructure.cliplearning.UserClipLearningProgressRepository
 import com.learner.language.infrastructure.cliplearning.UserSavedClipRepository
-import com.learner.language.interfaces.cliplearning.ClipLearningClipDto
 import com.learner.language.interfaces.cliplearning.ClipLearningClipPageItem
-import com.learner.language.interfaces.cliplearning.ClipLearningExplanationPayload
 import com.learner.language.interfaces.cliplearning.ClipLearningFeedDto
 import com.learner.language.interfaces.cliplearning.ClipLearningPagingPayload
 import com.learner.language.interfaces.cliplearning.ClipLearningProgressDto
 import com.learner.language.interfaces.cliplearning.ClipLearningSaveDto
+import com.learner.language.interfaces.cliplearning.ClipLearningTranscriptDto
 import com.learner.language.interfaces.cliplearning.ClipLearningUserStatePayload
-import com.learner.language.interfaces.cliplearning.ClipLearningVocabularyItemPayload
 import com.learner.language.system.exception.ErrorCode
 import com.learner.language.system.exception.NotFoundException
 import org.springframework.stereotype.Service
@@ -31,10 +29,10 @@ import java.time.format.DateTimeFormatter
 class ClipLearningServiceImpl(
     private val clipLearningFeedQueryRepository: ClipLearningFeedQueryRepository,
     private val clipLearningClipRepository: ClipLearningClipRepository,
-    private val clipLearningVocabularyRepository: ClipLearningVocabularyRepository,
     private val userSavedClipRepository: UserSavedClipRepository,
     private val userClipLearningProgressRepository: UserClipLearningProgressRepository,
-    private val userReader: UserReader
+    private val userReader: UserReader,
+    private val clipLearningTranscriptReader: ClipLearningTranscriptReader,
 ) : ClipLearningService {
 
     override fun retrieveFeed(userId: Long, request: ClipLearningFeedDto.FeedRequest): ClipLearningFeedDto.FeedResponse {
@@ -47,17 +45,11 @@ class ClipLearningServiceImpl(
         val pageRows = if (hasNext) rows.take(request.size) else rows
         val clipIds = pageRows.map { it.clipId }
 
-        val vocabularyByClipId = findVocabularyByClipIds(clipIds)
         val savedClipIds = findSavedClipIds(userId, clipIds)
-        val progressByClipId = findProgressByClipId(userId, clipIds)
 
         return ClipLearningFeedDto.FeedResponse(
             items = pageRows.map { row ->
-                row.toClipPageItem(
-                    saved = savedClipIds.contains(row.clipId),
-                    progress = progressByClipId[row.clipId],
-                    vocabulary = vocabularyByClipId[row.clipId].orEmpty()
-                )
+                row.toClipPageItem(saved = savedClipIds.contains(row.clipId))
             },
             paging = ClipLearningPagingPayload(
                 nextCursor = if (hasNext && pageRows.isNotEmpty()) pageRows.last().clipId.toString() else null,
@@ -66,21 +58,19 @@ class ClipLearningServiceImpl(
         )
     }
 
-    override fun retrieveClip(userId: Long, clipId: Long): ClipLearningClipDto.ClipDetailResponse {
+    override fun retrieveClip(userId: Long, clipId: Long): ClipLearningClipPageItem {
         val row = clipLearningFeedQueryRepository.findClipRowByClipId(clipId)
             ?: throw NotFoundException(ErrorCode.NOT_FOUND, "clipId=$clipId clip not found")
-        val vocabulary = clipLearningVocabularyRepository.findAllByClipIdOrderByDisplayOrderAsc(clipId)
-            .map { ClipLearningVocabularyItemPayload(word = it.word, meaning = it.meaning) }
         val saved = userSavedClipRepository.findByUserIdAndClipId(userId, clipId).isPresent
-        val progress = userClipLearningProgressRepository.findByUserIdAndClipId(userId, clipId).orElse(null)
 
-        return ClipLearningClipDto.ClipDetailResponse(
-            row.toClipPageItem(
-                saved = saved,
-                progress = progress,
-                vocabulary = vocabulary
-            )
-        )
+        return row.toClipPageItem(saved = saved)
+    }
+
+    override fun retrieveTranscript(
+        request: ClipLearningTranscriptDto.TranscriptRequest
+    ): ClipLearningTranscriptDto.TranscriptResponse {
+        val transcript = clipLearningTranscriptReader.retrieveTranscript(request.youtubeVideoId)
+        return ClipLearningTranscriptDto.TranscriptResponse(transcript)
     }
 
     @Transactional
@@ -149,23 +139,6 @@ class ClipLearningServiceImpl(
             }
     }
 
-    private fun findVocabularyByClipIds(clipIds: List<Long>): Map<Long, List<ClipLearningVocabularyItemPayload>> {
-        if (clipIds.isEmpty()) {
-            return emptyMap()
-        }
-
-        return clipLearningVocabularyRepository.findAllByClipIdInOrderByClipIdAscDisplayOrderAsc(clipIds)
-            .groupBy { it.clip.id }
-            .mapValues { (_, vocabularies) ->
-                vocabularies.map {
-                    ClipLearningVocabularyItemPayload(
-                        word = it.word,
-                        meaning = it.meaning
-                    )
-                }
-            }
-    }
-
     private fun findSavedClipIds(userId: Long, clipIds: List<Long>): Set<Long> {
         if (clipIds.isEmpty()) {
             return emptySet()
@@ -176,56 +149,14 @@ class ClipLearningServiceImpl(
             .toSet()
     }
 
-    private fun findProgressByClipId(userId: Long, clipIds: List<Long>): Map<Long, UserClipLearningProgress> {
-        if (clipIds.isEmpty()) {
-            return emptyMap()
-        }
-
-        return userClipLearningProgressRepository.findAllByUserIdAndClipIdIn(userId, clipIds)
-            .associateBy { it.clip.id }
-    }
-
-    private fun ClipLearningFeedRow.toClipPageItem(
-        saved: Boolean,
-        progress: UserClipLearningProgress?,
-        vocabulary: List<ClipLearningVocabularyItemPayload>
-    ): ClipLearningClipPageItem {
+    private fun ClipLearningFeedRow.toClipPageItem(saved: Boolean): ClipLearningClipPageItem {
         return ClipLearningClipPageItem(
             clipId = clipId,
-            sourceVideoId = sourceVideoId,
             youtubeVideoId = youtubeVideoId,
-            sourceUrl = sourceUrl,
-            title = title,
-            category = category,
-            channelName = channelName,
             clipStartMs = clipStartMs,
             clipEndMs = clipEndMs,
-            primarySentence = primarySentence,
-            userState = progress.toUserState(saved),
-            thumbnailUrl = thumbnailUrl,
-            translation = translation,
-            explanation = ClipLearningExplanationPayload(
-                summary = explanationSummary ?: "",
-                grammarPoints = emptyList(),
-                vocabulary = vocabulary,
-                usageTip = usageTip ?: ""
-            ),
-            clipDurationMs = clipDurationMs
-        )
-    }
-
-    private fun UserClipLearningProgress?.toUserState(saved: Boolean): ClipLearningUserStatePayload {
-        return ClipLearningUserStatePayload(
-            saved = saved,
-            completed = this?.completed ?: false,
-            masteryLevel = when {
-                this?.completed == true -> "review"
-                saved -> "learning"
-                else -> "new"
-            },
-            lastViewedAt = this?.updatedAt?.toUtcString(),
-            repeatCount = 0,
-            shadowingCount = 0
+            title = title,
+            userState = ClipLearningUserStatePayload(saved = saved),
         )
     }
 

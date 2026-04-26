@@ -13,8 +13,10 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.validation.annotation.Validated
 
 @RestController
+@Validated
 @RequestMapping("/api/v1/clip-learning")
 class ClipLearningApiController(
     private val clipLearningService: ClipLearningService
@@ -34,8 +36,17 @@ class ClipLearningApiController(
         @LoginUser userId: Long,
         @Positive(message = "clipId must be positive")
         @PathVariable("clipId") clipId: Long
-    ): ResponseEntity<ClipLearningClipDto.ClipDetailResponse> {
+    ): ResponseEntity<ClipLearningClipPageItem> {
         val response = clipLearningService.retrieveClip(userId, clipId)
+
+        return ResponseEntity.status(HttpStatus.OK).body(response)
+    }
+
+    @GetMapping("/transcript")
+    fun retrieveTranscript(
+        @Valid @ModelAttribute request: ClipLearningTranscriptDto.TranscriptRequest
+    ): ResponseEntity<ClipLearningTranscriptDto.TranscriptResponse> {
+        val response = clipLearningService.retrieveTranscript(request)
 
         return ResponseEntity.status(HttpStatus.OK).body(response)
     }

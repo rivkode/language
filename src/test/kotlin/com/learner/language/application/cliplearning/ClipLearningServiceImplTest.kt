@@ -1,7 +1,7 @@
 package com.learner.language.application.cliplearning
 
 import com.learner.language.domain.cliplearning.ClipLearningClip
-import com.learner.language.domain.cliplearning.ClipLearningVocabulary
+import com.learner.language.domain.cliplearning.ClipLearningTranscriptReader
 import com.learner.language.domain.cliplearning.ClipSourceVideo
 import com.learner.language.domain.cliplearning.UserClipLearningProgress
 import com.learner.language.domain.cliplearning.UserSavedClip
@@ -9,7 +9,6 @@ import com.learner.language.domain.user.UserReader
 import com.learner.language.infrastructure.cliplearning.ClipLearningClipRepository
 import com.learner.language.infrastructure.cliplearning.ClipLearningFeedQueryRepository
 import com.learner.language.infrastructure.cliplearning.ClipLearningFeedRow
-import com.learner.language.infrastructure.cliplearning.ClipLearningVocabularyRepository
 import com.learner.language.infrastructure.cliplearning.UserClipLearningProgressRepository
 import com.learner.language.infrastructure.cliplearning.UserSavedClipRepository
 import com.learner.language.interfaces.cliplearning.ClipLearningProgressDto
@@ -31,28 +30,28 @@ import java.util.Optional
 class ClipLearningServiceImplTest : BehaviorSpec({
     val clipLearningFeedQueryRepository = mockk<ClipLearningFeedQueryRepository>()
     val clipLearningClipRepository = mockk<ClipLearningClipRepository>()
-    val clipLearningVocabularyRepository = mockk<ClipLearningVocabularyRepository>()
     val userSavedClipRepository = mockk<UserSavedClipRepository>()
     val userClipLearningProgressRepository = mockk<UserClipLearningProgressRepository>()
     val userReader = mockk<UserReader>()
+    val clipLearningTranscriptReader = mockk<ClipLearningTranscriptReader>()
 
     val service = ClipLearningServiceImpl(
         clipLearningFeedQueryRepository = clipLearningFeedQueryRepository,
         clipLearningClipRepository = clipLearningClipRepository,
-        clipLearningVocabularyRepository = clipLearningVocabularyRepository,
         userSavedClipRepository = userSavedClipRepository,
         userClipLearningProgressRepository = userClipLearningProgressRepository,
-        userReader = userReader
+        userReader = userReader,
+        clipLearningTranscriptReader = clipLearningTranscriptReader
     )
 
     afterTest {
         clearMocks(
             clipLearningFeedQueryRepository,
             clipLearningClipRepository,
-            clipLearningVocabularyRepository,
             userSavedClipRepository,
             userClipLearningProgressRepository,
-            userReader
+            userReader,
+            clipLearningTranscriptReader
         )
     }
 
@@ -60,23 +59,31 @@ class ClipLearningServiceImplTest : BehaviorSpec({
         val userId = 1L
         val clipId = 1001L
         val row = clipRow(clipId = clipId)
-        val vocabulary = clipVocabularyEntities(clipId)
-        val progress = userClipLearningProgress(userId = userId, clipId = clipId, completed = true)
 
-        `when`("saved and progress data exist") {
+        `when`("a saved record exists for the user") {
             every { clipLearningFeedQueryRepository.findClipRowByClipId(clipId) } returns row
-            every { clipLearningVocabularyRepository.findAllByClipIdOrderByDisplayOrderAsc(clipId) } returns vocabulary
             every { userSavedClipRepository.findByUserIdAndClipId(userId, clipId) } returns Optional.of(userSavedClip(userId, clipId))
-            every { userClipLearningProgressRepository.findByUserIdAndClipId(userId, clipId) } returns Optional.of(progress)
 
             val response = service.retrieveClip(userId, clipId)
 
-            then("clip detail response is assembled from DB-backed data") {
+            then("clip detail response is assembled from slim DB row") {
                 response.clipId shouldBe clipId
                 response.youtubeVideoId shouldBe "youtube-video-id"
+                response.title shouldBe "Ordering Coffee Naturally"
+                response.clipStartMs shouldBe 12_000L
+                response.clipEndMs shouldBe 21_500L
                 response.userState.saved shouldBe true
-                response.userState.completed shouldBe true
-                response.explanation?.vocabulary?.size shouldBe 2
+            }
+        }
+
+        `when`("no saved record exists for the user") {
+            every { clipLearningFeedQueryRepository.findClipRowByClipId(clipId) } returns row
+            every { userSavedClipRepository.findByUserIdAndClipId(userId, clipId) } returns Optional.empty()
+
+            val response = service.retrieveClip(userId, clipId)
+
+            then("userState.saved is false") {
+                response.userState.saved shouldBe false
             }
         }
     }
@@ -175,20 +182,10 @@ class ClipLearningServiceImplTest : BehaviorSpec({
     companion object {
         private fun clipRow(clipId: Long) = ClipLearningFeedRow(
             clipId = clipId,
-            sourceVideoId = 501L,
             youtubeVideoId = "youtube-video-id",
-            sourceUrl = "https://www.youtube.com/watch?v=youtube-video-id",
             title = "Ordering Coffee Naturally",
-            category = "daily-conversation",
-            channelName = "Korean Daily Clips",
             clipStartMs = 12_000L,
             clipEndMs = 21_500L,
-            clipDurationMs = 9_500L,
-            primarySentence = "아이스 아메리카노 한 잔 주세요.",
-            translation = "I'd like one iced Americano, please.",
-            explanationSummary = "Useful Korean expression for ordering.",
-            usageTip = "Practice the clip in a loop.",
-            thumbnailUrl = "https://img.youtube.com/vi/youtube-video-id/hqdefault.jpg"
         )
 
         private fun clip(clipId: Long): ClipLearningClip {
@@ -214,14 +211,6 @@ class ClipLearningServiceImplTest : BehaviorSpec({
             }
         }
 
-        private fun clipVocabularyEntities(clipId: Long): List<ClipLearningVocabulary> {
-            val clip = clip(clipId)
-            return listOf(
-                ClipLearningVocabulary(clip = clip, word = "아이스", meaning = "iced", displayOrder = 1),
-                ClipLearningVocabulary(clip = clip, word = "한 잔", meaning = "one cup", displayOrder = 2)
-            )
-        }
-
         private fun user(userId: Long) = UserFixture.createUser(passwordEncoder = mockk(relaxed = true)).also {
             ReflectionTestUtils.setField(it, "id", userId)
         }
@@ -234,19 +223,6 @@ class ClipLearningServiceImplTest : BehaviorSpec({
             ReflectionTestUtils.setField(savedClip, "createdAt", LocalDateTime.of(2026, 3, 21, 10, 20, 0))
             ReflectionTestUtils.setField(savedClip, "updatedAt", LocalDateTime.of(2026, 3, 21, 10, 20, 0))
             return savedClip
-        }
-
-        private fun userClipLearningProgress(userId: Long, clipId: Long, completed: Boolean): UserClipLearningProgress {
-            val progress = UserClipLearningProgress(
-                user = user(userId),
-                clip = clip(clipId),
-                lastViewedPositionMs = 5_400L,
-                repeatEnabled = true,
-                translationVisible = false,
-                completed = completed
-            )
-            ReflectionTestUtils.setField(progress, "updatedAt", LocalDateTime.of(2026, 3, 21, 10, 25, 0))
-            return progress
         }
     }
 }
