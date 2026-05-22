@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/api/v1/chatrooms")
+@RequestMapping("/api/v1/diary-chatrooms")
 class DiaryChatRoomController(
     private val facade: DiaryChatRoomFacade,
 ) {

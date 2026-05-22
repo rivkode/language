@@ -594,6 +594,7 @@ Screen 3은 **"각자 녹음 → STT → 텍스트로 합류하는 음성 기반
 
 ### 7.0.1 구현 메모 / spec 대비 diff
 
+- **베이스 path 변경 (필수)** — spec 의 `/chatrooms` 는 기존 페르소나 채팅 도메인(`ChatRoomApiController`, `/api/v1/chatrooms`)이 이미 사용 중이라 충돌. **본 도메인은 `/api/v1/diary-chatrooms`** 로 마운트한다. 즉 `POST /api/v1/diary-chatrooms`, `GET /api/v1/diary-chatrooms/{roomId}`, `.../messages`, `.../messages/poll` 등 spec 의 모든 `/chatrooms/...` 를 `/diary-chatrooms/...` 로 치환.
 - **events 저장 모델 (구현 변경)** — spec은 events 를 별도 데이터로 다루지만, 단일 `after={messageId}` cursor 정합성을 위해 백엔드 내부에서는 `diary_chat_message` 테이블에 `source='system' + event_type` 형태로 함께 저장한다. 폴링 응답 시 `source` 로 분리해서 `items` / `events` 두 필드로 변환. **응답 shape 은 spec 그대로**.
 - **AI 토글 기본값** — spec은 `aiAssistantEnabled` 기본 false. 사용자(=PRD owner) 결정으로 **default true** 로 변경 (방 생성 시 자동 ON). 방장이 끌 수 있음.
 - **AI 식별자** — `author.userId = -1`, `username = "Jamo AI"` 합성 author 로 응답 (별도 필드 없이 author 객체에 담김).
